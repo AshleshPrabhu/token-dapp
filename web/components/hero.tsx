@@ -81,23 +81,6 @@ export function Hero() {
               </p>
             </div>
           </div>
-
-          {/* CTA Section */}
-          <div className="bg-muted/30 rounded-2xl p-8 border border-border">
-            <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
-            <p className="text-muted-foreground mb-6">
-              Connect your wallet and start managing your tokens in seconds.
-            </p>
-            <Button 
-              size="lg" 
-              onClick={handleGetStarted}
-              variant="outline"
-              className="text-lg px-8 py-6 h-auto"
-            >
-              Launch Dashboard
-              <Zap className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
         </div>
       </div>
     </div>

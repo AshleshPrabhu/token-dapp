@@ -56,21 +56,6 @@ export function DashboardContent() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Token Operations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <Coins className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Token operations ready</h3>
-            <p className="text-sm">
-              Use the sidebar to mint, burn, transfer tokens and manage allowances
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

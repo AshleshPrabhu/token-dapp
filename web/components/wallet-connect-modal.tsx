@@ -2,42 +2,43 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wallet, Chrome, Smartphone, HardDrive } from 'lucide-react';
+import { Wallet } from 'lucide-react';
+import { useConnect } from "wagmi"
 
 interface WalletConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConnect: (walletType: string) => void;
 }
 
-const wallets = [
-  {
-    name: 'MetaMask',
-    icon: Chrome,
-    description: 'Connect using browser extension',
-    id: 'metamask'
-  },
-  {
-    name: 'WalletConnect',
-    icon: Smartphone,
-    description: 'Connect using mobile wallet',
-    id: 'walletconnect'
-  },
-  {
-    name: 'Coinbase Wallet',
-    icon: Wallet,
-    description: 'Connect using Coinbase Wallet',
-    id: 'coinbase'
-  },
-  {
-    name: 'Hardware Wallet',
-    icon: HardDrive,
-    description: 'Connect using Ledger or Trezor',
-    id: 'hardware'
-  }
-];
+// const wallets = [
+//   {
+//     name: 'MetaMask',
+//     icon: Chrome,
+//     description: 'Connect using browser extension',
+//     id: 'metamask'
+//   },
+//   {
+//     name: 'WalletConnect',
+//     icon: Smartphone,
+//     description: 'Connect using mobile wallet',
+//     id: 'walletconnect'
+//   },
+//   {
+//     name: 'Coinbase Wallet',
+//     icon: Wallet,
+//     description: 'Connect using Coinbase Wallet',
+//     id: 'coinbase'
+//   },
+//   {
+//     name: 'Hardware Wallet',
+//     icon: HardDrive,
+//     description: 'Connect using Ledger or Trezor',
+//     id: 'hardware'
+//   }
+// ];
 
-export function WalletConnectModal({ isOpen, onClose, onConnect }: WalletConnectModalProps) {
+export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps) {
+  const {connectors,connect} = useConnect()
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -51,17 +52,19 @@ export function WalletConnectModal({ isOpen, onClose, onConnect }: WalletConnect
           <p className="text-sm text-muted-foreground mb-4">
             Choose your preferred wallet to connect and start managing your tokens.
           </p>
-          {wallets.map((wallet) => (
+          {connectors.map((connector) => (
             <Button
-              key={wallet.id}
+              key={connector.uid}
               variant="outline"
               className="w-full justify-start h-auto p-4"
-              onClick={() => onConnect(wallet.id)}
+              onClick={() => {
+                connect({connector})
+              }}
             >
-              <wallet.icon className="h-5 w-5 mr-3" />
+              <Wallet className="h-5 w-5 mr-3" />
               <div className="text-left">
-                <div className="font-medium">{wallet.name}</div>
-                <div className="text-xs text-muted-foreground">{wallet.description}</div>
+                <div className="font-medium">{connector.name}</div>
+                {/* <div className="text-xs text-muted-foreground">{connector.description}</div> */}
               </div>
             </Button>
           ))}
