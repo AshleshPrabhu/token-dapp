@@ -6,7 +6,7 @@ export function DashboardContent() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Recent Tokens
@@ -26,7 +26,7 @@ export function DashboardContent() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
