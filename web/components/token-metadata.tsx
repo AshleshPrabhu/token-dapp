@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, Shield, Clock,Plus, ArrowRight, Coins, Flame, Send, Info, History, CreditCard } from 'lucide-react';
-
+import Link from 'next/link'
 import { toast } from 'sonner';
 
 export function TokenMetadata() {
@@ -60,25 +60,32 @@ export function TokenMetadata() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Quick Actions
-                    <Button variant="ghost" size="sm">
+                    {/* <Button variant="ghost" size="sm">
                       More
                       <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
+                    </Button> */}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Button variant="outline" className="w-full justify-start">
                       <Plus className="h-4 w-4 mr-2" />
+                      <Link href="/mint">
+                      
                       Mint Tokens
+                      </Link>
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <Send className="h-4 w-4 mr-2" />
+                      <Link href="/transfer">
                       Transfer Tokens
+                      </Link>
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <CreditCard className="h-4 w-4 mr-2" />
+                      <Link href="/balance">
                       Check Balance
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
