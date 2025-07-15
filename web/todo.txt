@@ -1,0 +1,6 @@
+1. add enter contract input field 
+2. fetch the abi from etherscan api
+3. accordinly show the details , dont allow to mint if not owner
+4. rest other fields are fine
+5. add allowance section - where we can check the allowance history 
+6. add transaction history -> idk what is it check it once
