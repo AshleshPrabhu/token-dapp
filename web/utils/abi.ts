@@ -431,3 +431,4 @@ const ABI= [
 ]
 
 export default ABI;
+export const ContractAddress = "0x31b2da62a1fccb0d99eeaf0940a3127045a86830";

@@ -7,30 +7,45 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useWriteContract } from 'wagmi';
+import { parseUnits } from 'viem';
+import ABI, { ContractAddress } from '@/utils/abi';
+import { toast } from 'sonner';
 
 export default function MintPage() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [txHash, setTxHash] = useState('');
 
+  const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleMint = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setTxHash('0x1234567890abcdef...');
-      setIsLoading(false);
-    }, 2000);
-  };
+  try {
+    writeContract({
+      address: ContractAddress,
+      abi: ABI,
+      functionName: 'mint',
+      args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+    });
+    // console.log("Mint initiated",data);
+    toast.success("minted successfully")
+  } catch (err: unknown) {
+    // console.error("Mint failed:", err);
+    toast.error("failed to mint")
+    if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
+      if ('message' in err) {
+        console.error("Revert Reason:", err.message);
+      }
+    }
+  }
+};
 
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header isWalletConnected={true} />
+          <Header  />
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto">
               <div className="mb-8">
@@ -74,20 +89,11 @@ export default function MintPage() {
 
                     <Button 
                       onClick={handleMint}
-                      disabled={!recipient || !amount || isLoading}
+                      disabled={!recipient || !amount || isPending}
                       className="w-full"
                     >
-                      {isLoading ? 'Minting...' : 'Mint Tokens'}
+                      {isPending ? 'Minting...' : 'Mint Tokens'}
                     </Button>
-
-                    {txHash && (
-                      <Alert>
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Transaction successful! Hash: {txHash}
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </CardContent>
                 </Card>
 
@@ -105,20 +111,51 @@ export default function MintPage() {
                     
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Gas Fee:</span>
-                        <span>~0.002 ETH</span>
+                        {/* <span className="text-muted-foreground">Gas Fee:</span>
+                        <span>~0.002 ETH</span> */}
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Network:</span>
-                        <span>Ethereum Mainnet</span>
+                        <span>Ethereum Sepolia</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Confirmation Time:</span>
-                        <span>~15 seconds</span>
+                        <span>~30 seconds</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {isError && (
+                  <Card className="md:col-span-2">
+                  <CardContent className="pt-4">
+                    <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="break-words">
+                      {error?.message ? 
+                      (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
+                      : "Transaction failed"}
+                    </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                  </Card>
+                )}
+
+                {!isPending && data && (
+                  <Card className="md:col-span-2">
+                  <CardContent className="pt-4">
+                    <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription className="flex flex-col">
+                      <span>Transaction successful!</span>
+                      <span className="text-xs text-muted-foreground break-all mt-1">
+                      Hash: {data}
+                      </span>
+                    </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </main>
