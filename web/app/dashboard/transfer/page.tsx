@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +9,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAccount } from 'wagmi';
+import tokenContract from '@/utils/contract';
+import { ethers } from 'ethers';
 
 export default function TransferPage() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState('');
+  const { address } = useAccount()
+    const [balance, setBalance] = useState('')
+  
+    useEffect(() => {
+      const fetchBalance = async () => {
+        if (!address) return
+        const bal = await tokenContract.balanceOf(address)
+        setBalance(ethers.formatUnits(bal, 18))
+      }
+  
+      fetchBalance()
+    }, [address])
 
   const handleTransfer = async () => {
     setIsLoading(true);
@@ -29,7 +44,7 @@ export default function TransferPage() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header isWalletConnected={true} />
+          <Header />
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto">
               <div className="mb-8">

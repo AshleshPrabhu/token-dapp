@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,12 +13,23 @@ import { useAccount, useEnsAddress, useWriteContract } from 'wagmi';
 import ABI, { ContractAddress } from '@/utils/abi';
 import { parseUnits } from 'viem';
 import { toast } from 'sonner';
+import tokenContract from '@/utils/contract';
+import { ethers } from 'ethers';
 
 export default function BurnPage() {
   const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [txHash, setTxHash] = useState('');
-  const {address} = useAccount()
+  const { address } = useAccount()
+  const [balance, setBalance] = useState('')
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address) return
+      const bal = await tokenContract.balanceOf(address)
+      setBalance(ethers.formatUnits(bal, 18))
+    }
+
+    fetchBalance()
+  }, [address])
   const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleBurn = async () => {
     try {
@@ -81,9 +92,9 @@ export default function BurnPage() {
                         onChange={(e) => setAmount(e.target.value)}
                         className="mt-1"
                       />
-                      {/* <p className="text-xs text-muted-foreground mt-1">
-                        Available balance: 1,000.00 tokens
-                      </p> */}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Available balance: {balance} tokens
+                      </p>
                     </div>
 
                     <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -96,21 +107,12 @@ export default function BurnPage() {
 
                     <Button 
                       onClick={handleBurn}
-                      disabled={!amount || isLoading}
+                      disabled={!amount || isPending}
                       variant="destructive"
                       className="w-full"
                     >
-                      {isLoading ? 'Burning...' : 'Burn Tokens'}
+                      {isPending ? 'Burning...' : 'Burn Tokens'}
                     </Button>
-
-                    {txHash && (
-                      <Alert>
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Burn successful! Hash: {txHash}
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </CardContent>
                 </Card>
 
