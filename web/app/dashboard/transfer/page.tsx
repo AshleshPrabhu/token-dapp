@@ -85,7 +85,7 @@ export default function TransferPage() {
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Available balance: 1,000.00 tokens
+                        Available balance: {balance} tokens
                       </p>
                     </div>
 
@@ -116,7 +116,7 @@ export default function TransferPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Your Balance:</span>
-                        <span>1,000.00 tokens</span>
+                        <span>{balance} tokens</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Gas Fee:</span>
@@ -124,7 +124,7 @@ export default function TransferPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Network:</span>
-                        <span>Ethereum Mainnet</span>
+                        <span>Ethereum Sepolia</span>
                       </div>
                     </div>
 

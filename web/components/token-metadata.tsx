@@ -70,20 +70,20 @@ export function TokenMetadata() {
                   <div className="space-y-3">
                     <Button variant="outline" className="w-full justify-start">
                       <Plus className="h-4 w-4 mr-2" />
-                      <Link href="/mint">
+                      <Link href="/dashboard/mint">
                       
                       Mint Tokens
                       </Link>
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <Send className="h-4 w-4 mr-2" />
-                      <Link href="/transfer">
+                      <Link href="/dashboard/transfer">
                       Transfer Tokens
                       </Link>
                     </Button>
                     <Button variant="outline" className="w-full justify-start">
                       <CreditCard className="h-4 w-4 mr-2" />
-                      <Link href="/balance">
+                      <Link href="/dashboard/balance">
                       Check Balance
                       </Link>
                     </Button>
