@@ -27,6 +27,29 @@ export default function HistoryPage() {
   const { address } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const getOrStoreInLocalStorage = async() => {
+    const data = localStorage.getItem("transactions");
+    if (data) {
+      const parsedData = JSON.parse(data);
+      const oldDate = new Date(parsedData.timestamp);
+      const currentDate = new Date();
+
+      if ((currentDate.getTime() - oldDate.getTime()) < 24 * 60 * 60 * 1000) {
+        setTransactions(parsedData.transactions);
+        return
+      }
+    }
+    const transactions = await getTransactions()
+    if (transactions && Array.isArray(transactions)) {
+      setTransactions(transactions);
+      const newData = {
+        timestamp: new Date().toISOString(),
+        transactions
+      };
+      localStorage.setItem("transactions", JSON.stringify(newData));
+    }
+  }
+
   const getTransactions = async () => {
     console.log(address)
     if (!address) return;
@@ -55,7 +78,7 @@ export default function HistoryPage() {
       }
 
       const parsedTxs: Transaction[] = allLogs
-        .filter((log) => log.args) // filter out unexpected logs
+        .filter((log) => log.args)
         .sort((a, b) => b.blockNumber - a.blockNumber)
         .map((log, index) => {
           const { from, to, value } = log.args;
@@ -78,7 +101,8 @@ export default function HistoryPage() {
           };
         });
 
-      setTransactions(parsedTxs);
+      // setTransactions(parsedTxs);
+      return parsedTxs;
     } catch (err) {
       console.error(' Error while fetching transactions:', err);
     }
@@ -93,34 +117,21 @@ export default function HistoryPage() {
           <Header />
           <main className="flex-1 p-6">
             <div className="max-w-7xl mx-auto">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground flex items-center">
-                  <History className="h-8 w-8 mr-3" />
-                  Transaction History
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  View all token transactions and activities
-                </p>
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground flex items-center">
+                    <History className="h-8 w-8 mr-3" />
+                    Transaction History
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    View all token transactions and activities
+                  </p>
+                </div>
+                <Button onClick={()=>getOrStoreInLocalStorage()}>
+                  <Search className="h-4 w-4 mr-2" />
+                  Get Transactions
+                </Button>
               </div>
-
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Filter Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4">
-                    <Input placeholder="Search by transaction hash or address..." className="w-full" />
-                    <Button variant="outline">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filter
-                    </Button>
-                    <Button variant="outline" onClick={()=>getTransactions()}>
-                      <Search className="h-4 w-4 mr-2" />
-                      Search
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
 
               <Card>
                 <CardHeader>
@@ -182,6 +193,7 @@ export default function HistoryPage() {
               </Card>
             </div>
           </main>
+
         </div>
       </div>
     </div>
