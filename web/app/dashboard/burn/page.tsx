@@ -41,7 +41,7 @@ export default function BurnPage() {
       });
       toast.success("burned successfully")
     } catch (err:unknown) {
-      toast.error("failed to mint")
+      toast.error("failed to burn")
       if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
         if ('message' in err) {
           console.error("Revert Reason:", err.message);

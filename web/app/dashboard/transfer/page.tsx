@@ -9,35 +9,58 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAccount } from 'wagmi';
+
+import { useAccount, useWriteContract } from 'wagmi';
 import tokenContract from '@/utils/contract';
-import { ethers } from 'ethers';
+import ABI, { ContractAddress } from '@/utils/abi';
+import { parseUnits } from 'viem';
+import { ethers, isAddress } from 'ethers';
+import { toast } from 'sonner';
 
 export default function TransferPage() {
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [txHash, setTxHash] = useState('');
   const { address } = useAccount()
-    const [balance, setBalance] = useState('')
-  
-    useEffect(() => {
-      const fetchBalance = async () => {
-        if (!address) return
-        const bal = await tokenContract.balanceOf(address)
-        setBalance(ethers.formatUnits(bal, 18))
-      }
-  
-      fetchBalance()
-    }, [address])
+  const [balance, setBalance] = useState('')
+
+  const fetchBalance = async () => {
+    if (!address) return
+    console.log("a")
+    const bal = await tokenContract.balanceOf(address)
+    setBalance(ethers.formatUnits(bal, 18))
+  }
+  useEffect(() => {
+
+    fetchBalance()
+  }, [address])
+
+  const { writeContract, isPending, isError, error, data } = useWriteContract();
 
   const handleTransfer = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setTxHash('0xabcdef1234567890...');
-      setIsLoading(false);
-    }, 2000);
+    if (!recipient || !isAddress(recipient)) {
+      toast.error('Please enter a valid Ethereum address');
+      return;
+    }
+    try {
+      writeContract({
+        address: ContractAddress,
+        abi: ABI,
+        functionName: 'transfer',
+        args: [recipient,parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+      });
+      setAmount("");
+      setRecipient("")
+      toast.success("transfered successfully")
+    } catch (err:unknown) {
+      toast.error("failed to transfer")
+      if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
+        if ('message' in err) {
+          console.error("Revert Reason:", err.message);
+        }
+      }
+    }
   };
+  // TODO:  add refresh balance method
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,20 +114,11 @@ export default function TransferPage() {
 
                     <Button 
                       onClick={handleTransfer}
-                      disabled={!recipient || !amount || isLoading}
+                      disabled={!recipient || !amount || isPending}
                       className="w-full"
                     >
-                      {isLoading ? 'Sending...' : 'Send Tokens'}
+                      {isPending ? 'Sending...' : 'Send Tokens'}
                     </Button>
-
-                    {txHash && (
-                      <Alert>
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Transfer successful! Hash: {txHash}
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </CardContent>
                 </Card>
 
@@ -136,6 +150,37 @@ export default function TransferPage() {
                     </Alert>
                   </CardContent>
                 </Card>
+
+                {isError && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="pt-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="break-words">
+                          {error?.message ? 
+                          (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
+                          : "Transaction failed"}
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
+                                
+                {!isPending && data && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="pt-4">
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertDescription className="flex flex-col">
+                          <span>Transaction successful!</span>
+                          <span className="text-xs text-muted-foreground break-all mt-1">
+                          Hash: {data}
+                          </span>
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </main>
