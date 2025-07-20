@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,57 +8,89 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { History, Search, ExternalLink, Filter } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import tokenContract, { provider } from '@/utils/contract';
+import { formatUnits } from 'ethers';
 
-const transactions = [
-  {
-    id: '1',
-    type: 'Transfer',
-    hash: '0x1234567890abcdef1234567890abcdef12345678',
-    from: '0xabcd...1234',
-    to: '0xefgh...5678',
-    amount: '100.00',
-    timestamp: '2 hours ago',
-    status: 'Success'
-  },
-  {
-    id: '2',
-    type: 'Mint',
-    hash: '0xabcdef1234567890abcdef1234567890abcdef12',
-    from: '0x0000...0000',
-    to: '0xabcd...1234',
-    amount: '500.00',
-    timestamp: '1 day ago',
-    status: 'Success'
-  },
-  {
-    id: '3',
-    type: 'Burn',
-    hash: '0x567890abcdef1234567890abcdef1234567890ab',
-    from: '0xabcd...1234',
-    to: '0x0000...0000',
-    amount: '50.00',
-    timestamp: '2 days ago',
-    status: 'Success'
-  },
-  {
-    id: '4',
-    type: 'Approval',
-    hash: '0xcdef1234567890abcdef1234567890abcdef1234',
-    from: '0xabcd...1234',
-    to: '0x1111...2222',
-    amount: '1000.00',
-    timestamp: '3 days ago',
-    status: 'Success'
-  }
-];
+interface Transaction {
+  id: string;
+  hash: string;
+  from: string;
+  to: string;
+  amount: string;
+  type: 'Transfer' | 'Mint' | 'Burn';
+  timestamp: string;
+  status: 'Success' | 'Failed';
+}
 
 export default function HistoryPage() {
+  const { address } = useAccount();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const getTransactions = async () => {
+    console.log(address)
+    if (!address) return;
+    try {
+      const fromBlock = 8700000;
+      const latestBlock = await provider.getBlockNumber();
+      const chunkSize = 500;
+      let allLogs: any[] = [];
+
+      for (let start = fromBlock; start <= latestBlock; start += chunkSize) {
+        console.log(start)
+        const end = Math.min(start + chunkSize - 1, latestBlock);
+
+        const sentLogs = await tokenContract.queryFilter(
+          tokenContract.filters.Transfer(address, null),
+          start,
+          end
+        );
+        const receivedLogs = await tokenContract.queryFilter(
+          tokenContract.filters.Transfer(null, address),
+          start,
+          end
+        );
+
+        allLogs.push(...sentLogs, ...receivedLogs);
+      }
+
+      const parsedTxs: Transaction[] = allLogs
+        .filter((log) => log.args) // filter out unexpected logs
+        .sort((a, b) => b.blockNumber - a.blockNumber)
+        .map((log, index) => {
+          const { from, to, value } = log.args;
+          const type =
+            from === '0x0000000000000000000000000000000000000000'
+              ? 'Mint'
+              : to === '0x0000000000000000000000000000000000000000'
+              ? 'Burn'
+              : 'Transfer';
+
+          return {
+            id: `${log.transactionHash}-${index}`,
+            hash: log.transactionHash,
+            from,
+            to,
+            amount: formatUnits(value, 18), // TODO:  
+            type,
+            timestamp: `Block #${log.blockNumber}`,
+            status: 'Success',
+          };
+        });
+
+      setTransactions(parsedTxs);
+    } catch (err) {
+      console.error(' Error while fetching transactions:', err);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header isWalletConnected={true} />
+          <Header />
           <main className="flex-1 p-6">
             <div className="max-w-7xl mx-auto">
               <div className="mb-8">
@@ -76,17 +109,12 @@ export default function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-4">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Search by transaction hash or address..."
-                        className="w-full"
-                      />
-                    </div>
+                    <Input placeholder="Search by transaction hash or address..." className="w-full" />
                     <Button variant="outline">
                       <Filter className="h-4 w-4 mr-2" />
                       Filter
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={()=>getTransactions()}>
                       <Search className="h-4 w-4 mr-2" />
                       Search
                     </Button>
@@ -101,46 +129,55 @@ export default function HistoryPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {transactions.map((tx) => (
-                      <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div
+                        key={tx.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
                         <div className="flex items-center space-x-4">
-                          <div>
-                            <Badge variant={
-                              tx.type === 'Transfer' ? 'default' :
-                              tx.type === 'Mint' ? 'secondary' :
-                              tx.type === 'Burn' ? 'destructive' :
-                              'outline'
-                            }>
-                              {tx.type}
-                            </Badge>
-                          </div>
+                          <Badge
+                            variant={
+                              tx.type === 'Transfer'
+                                ? 'default'
+                                : tx.type === 'Mint'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                          >
+                            {tx.type}
+                          </Badge>
                           <div>
                             <p className="font-medium">{tx.amount} tokens</p>
                             <p className="text-sm text-muted-foreground">
-                              From: {tx.from} → To: {tx.to}
+                              From: {tx.from.slice(0, 6)}...{tx.from.slice(-4)} → To: {tx.to.slice(0, 6)}...
+                              {tx.to.slice(-4)}
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="text-right">
                           <p className="text-sm font-medium">{tx.timestamp}</p>
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline" className="text-xs">
                               {tx.status}
                             </Badge>
-                            <Button variant="ghost" size="sm">
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
+                            <a
+                              href={`https://sepolia.etherscan.io/tx/${tx.hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button variant="ghost" size="sm">
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                            </a>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 flex justify-center">
-                    <Button variant="outline">
-                      Load More Transactions
-                    </Button>
-                  </div>
+                  {transactions.length === 0 && (
+                    <div className="text-center text-muted-foreground mt-4">No transactions found.</div>
+                  )}
                 </CardContent>
               </Card>
             </div>
