@@ -10,7 +10,6 @@ import {
   Flame,
   Send,
   Shield,
-  Info,
   History,
   CreditCard,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ const navigation = [
   { name: 'Transfer', href: '/dashboard/transfer', icon: Send },
   { name: 'Balance', href: '/dashboard/balance', icon: CreditCard },
   { name: 'Allowance', href: '/dashboard/allowance', icon: Shield },
-  { name: 'Info', href: '/dashboard/info', icon: Info },
   { name: 'History', href: '/history', icon: History },
 ];
 

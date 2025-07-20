@@ -1,31 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Plus, Minus, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ethers } from 'ethers';
+import { useAccount, useWriteContract } from 'wagmi';
+import ABI, { ContractAddress } from '@/utils/abi';
+import { parseUnits, createPublicClient , http, isAddress } from 'viem';
+import { toast } from 'sonner';
+import { sepolia } from 'viem/chains'
+import { readContract } from 'viem/actions';
 
 export default function AllowancePage() {
   const [spender, setSpender] = useState('');
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { address } = useAccount()
+  const [balance, setBalance] = useState('')
+  const client = createPublicClient({ 
+    chain: sepolia,
+    transport: http("https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37")
+  });
 
-  const handleApprove = async () => {
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 2000);
+  const { writeContract, isPending, isError, error, data } = useWriteContract();
+
+  const handleApprove = async () => { 
+    try {
+      writeContract({
+        address: ContractAddress,
+        abi: ABI,
+        functionName: 'approve',
+        args: [ spender, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+      });
+      toast.success("approved successfully")
+      setSpender("")
+      setAmount("")
+    } catch (err:unknown) {
+      toast.error("failed to approve")
+      if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
+        if ('message' in err) {
+          console.error("Revert Reason:", err.message);
+        }
+      }
+    }
   };
+
+  const checkAllowance =async()=>{
+    try {
+      if (!spender || !isAddress(spender)) {
+        toast.error('Please enter a valid Ethereum address');
+        return;
+      }
+      setIsLoading(true)
+      const result = await readContract(
+        client,
+        {
+          address: ContractAddress,
+          abi: ABI,
+          functionName: 'allowance',
+          args: [address,spender],
+        }
+      );
+
+      const formattedBalance = ethers.formatUnits(result as bigint, 18);
+      setBalance(formattedBalance)
+    } catch (error) {
+      console.log(error)
+      toast.error("failed to fetch the allowance")
+    }finally{
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header isWalletConnected={true} />
+          <Header />
           <main className="flex-1 p-6">
             <div className="max-w-6xl mx-auto">
               <div className="mb-8">
@@ -66,20 +124,17 @@ export default function AllowancePage() {
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Enter amount or use "unlimited" for maximum allowance
+                        Enter amount for allowance
                       </p>
                     </div>
 
                     <div className="flex gap-2">
                       <Button 
                         onClick={handleApprove}
-                        disabled={!spender || !amount || isLoading}
+                        disabled={!spender || !amount || isPending}
                         className="flex-1"
                       >
-                        {isLoading ? 'Approving...' : 'Approve'}
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        Revoke
+                        {isPending ? 'Approving...' : 'Approve'}
                       </Button>
                     </div>
 
@@ -116,55 +171,49 @@ export default function AllowancePage() {
                       />
                     </div>
 
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={()=>checkAllowance()} disabled={isLoading}>
                       Check Allowance
                     </Button>
 
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm font-medium">Current Allowance</p>
-                      <p className="text-2xl font-bold">0.00</p>
+                      <p className="text-2xl font-bold">{balance}</p>
                       <p className="text-xs text-muted-foreground">tokens approved</p>
                     </div>
                   </CardContent>
                 </Card>
+
+                {isError && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="pt-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="break-words">
+                          {error?.message ? 
+                          (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
+                          : "Transaction failed"}
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
+                                
+                {!isPending && data && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="pt-4">
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertDescription className="flex flex-col">
+                          <span>Transaction successful!</span>
+                          <span className="text-xs text-muted-foreground break-all mt-1">
+                          Hash: {data}
+                          </span>
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
-
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Active Allowances</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Uniswap V3 Router</p>
-                        <p className="text-sm text-muted-foreground">0x68b3...c4c8</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">500.00</p>
-                        <p className="text-sm text-muted-foreground">tokens approved</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Revoke
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">1inch Exchange</p>
-                        <p className="text-sm text-muted-foreground">0x11111...1111</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">Unlimited</p>
-                        <p className="text-sm text-muted-foreground">maximum approved</p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Revoke
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </main>
         </div>
