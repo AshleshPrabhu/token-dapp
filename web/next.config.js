@@ -11,7 +11,7 @@ const nextConfig = {
   // output: 'export',
 
   // ✅ Place `transpilePackages` at the root level, not under `experimental`
-  transpilePackages: ['@coinbase/wallet-sdk'],
+  transpilePackages: ["@coinbase/wallet-sdk"],
 };
 
 module.exports = nextConfig;

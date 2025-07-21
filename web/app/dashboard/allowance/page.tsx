@@ -1,82 +1,86 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Shield, AlertCircle, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ethers } from 'ethers';
-import { useAccount, useWriteContract } from 'wagmi';
-import ABI, { ContractAddress } from '@/utils/abi';
-import { parseUnits, createPublicClient , http, isAddress } from 'viem';
-import { toast } from 'sonner';
-import { sepolia } from 'viem/chains'
-import { readContract } from 'viem/actions';
+import { useEffect, useState } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ethers } from "ethers";
+import { useAccount, useWriteContract } from "wagmi";
+import ABI, { ContractAddress } from "@/utils/abi";
+import { parseUnits, createPublicClient, http, isAddress } from "viem";
+import { toast } from "sonner";
+import { sepolia } from "viem/chains";
+import { readContract } from "viem/actions";
 
 export default function AllowancePage() {
-  const [spender, setSpender] = useState('');
-  const [amount, setAmount] = useState('');
+  const [spender, setSpender] = useState("");
+  const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { address } = useAccount()
-  const [balance, setBalance] = useState('')
-  const client = createPublicClient({ 
+  const { address } = useAccount();
+  const [balance, setBalance] = useState("");
+  const client = createPublicClient({
     chain: sepolia,
-    transport: http("https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37")
+    transport: http(
+      "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37",
+    ),
   });
 
   const { writeContract, isPending, isError, error, data } = useWriteContract();
 
-  const handleApprove = async () => { 
+  const handleApprove = async () => {
     try {
       writeContract({
         address: ContractAddress,
         abi: ABI,
-        functionName: 'approve',
-        args: [ spender, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+        functionName: "approve",
+        args: [spender, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
       });
-      toast.success("approved successfully")
-      setSpender("")
-      setAmount("")
-    } catch (err:unknown) {
-      toast.error("failed to approve")
-      if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
-        if ('message' in err) {
+      toast.success("approved successfully");
+      setSpender("");
+      setAmount("");
+    } catch (err: unknown) {
+      toast.error("failed to approve");
+      if (
+        err &&
+        typeof err === "object" &&
+        "name" in err &&
+        err.name === "ContractFunctionRevertedError"
+      ) {
+        if ("message" in err) {
           console.error("Revert Reason:", err.message);
         }
       }
     }
   };
 
-  const checkAllowance =async()=>{
+  const checkAllowance = async () => {
     try {
       if (!spender || !isAddress(spender)) {
-        toast.error('Please enter a valid Ethereum address');
+        toast.error("Please enter a valid Ethereum address");
         return;
       }
-      setIsLoading(true)
-      const result = await readContract(
-        client,
-        {
-          address: ContractAddress,
-          abi: ABI,
-          functionName: 'allowance',
-          args: [address,spender],
-        }
-      );
+      setIsLoading(true);
+      const result = await readContract(client, {
+        address: ContractAddress,
+        abi: ABI,
+        functionName: "allowance",
+        args: [address, spender],
+      });
 
       const formattedBalance = ethers.formatUnits(result as bigint, 18);
-      setBalance(formattedBalance)
+      setBalance(formattedBalance);
     } catch (error) {
-      console.log(error)
-      toast.error("failed to fetch the allowance")
-    }finally{
-      setIsLoading(false)
+      console.log(error);
+      toast.error("failed to fetch the allowance");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,7 +116,7 @@ export default function AllowancePage() {
                         className="mt-1"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="amount">Allowance Amount</Label>
                       <Input
@@ -129,19 +133,20 @@ export default function AllowancePage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Button 
+                      <Button
                         onClick={handleApprove}
                         disabled={!spender || !amount || isPending}
                         className="flex-1"
                       >
-                        {isPending ? 'Approving...' : 'Approve'}
+                        {isPending ? "Approving..." : "Approve"}
                       </Button>
                     </div>
 
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Only approve trusted contracts and addresses. This gives them permission to spend your tokens.
+                        Only approve trusted contracts and addresses. This gives
+                        them permission to spend your tokens.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -161,7 +166,7 @@ export default function AllowancePage() {
                         disabled
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="checkSpender">Spender Address</Label>
                       <Input
@@ -171,14 +176,21 @@ export default function AllowancePage() {
                       />
                     </div>
 
-                    <Button variant="outline" className="w-full" onClick={()=>checkAllowance()} disabled={isLoading}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => checkAllowance()}
+                      disabled={isLoading}
+                    >
                       Check Allowance
                     </Button>
 
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm font-medium">Current Allowance</p>
                       <p className="text-2xl font-bold">{balance}</p>
-                      <p className="text-xs text-muted-foreground">tokens approved</p>
+                      <p className="text-xs text-muted-foreground">
+                        tokens approved
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -189,15 +201,17 @@ export default function AllowancePage() {
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription className="break-words">
-                          {error?.message ? 
-                          (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
-                          : "Transaction failed"}
+                          {error?.message
+                            ? typeof error.message === "string"
+                              ? error.message
+                              : JSON.stringify(error.message)
+                            : "Transaction failed"}
                         </AlertDescription>
                       </Alert>
                     </CardContent>
                   </Card>
                 )}
-                                
+
                 {!isPending && data && (
                   <Card className="md:col-span-2">
                     <CardContent className="pt-4">
@@ -206,7 +220,7 @@ export default function AllowancePage() {
                         <AlertDescription className="flex flex-col">
                           <span>Transaction successful!</span>
                           <span className="text-xs text-muted-foreground break-all mt-1">
-                          Hash: {data}
+                            Hash: {data}
                           </span>
                         </AlertDescription>
                       </Alert>

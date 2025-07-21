@@ -1,60 +1,64 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Send, AlertCircle, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCallback, useEffect, useState } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Send, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-import { useAccount, useWriteContract } from 'wagmi';
-import tokenContract from '@/utils/contract';
-import ABI, { ContractAddress } from '@/utils/abi';
-import { parseUnits } from 'viem';
-import { ethers, isAddress } from 'ethers';
-import { toast } from 'sonner';
+import { useAccount, useWriteContract } from "wagmi";
+import tokenContract from "@/utils/contract";
+import ABI, { ContractAddress } from "@/utils/abi";
+import { parseUnits } from "viem";
+import { ethers, isAddress } from "ethers";
+import { toast } from "sonner";
 
 export default function TransferPage() {
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
-  const { address } = useAccount()
-  const [balance, setBalance] = useState('')
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
+  const { address } = useAccount();
+  const [balance, setBalance] = useState("");
 
-  const fetchBalance = async () => {
-    if (!address) return
-    console.log("a")
-    const bal = await tokenContract.balanceOf(address)
-    setBalance(ethers.formatUnits(bal, 18))
-  }
+  const fetchBalance = useCallback(async () => {
+    if (!address) return;
+    console.log("a");
+    const bal = await tokenContract.balanceOf(address);
+    setBalance(ethers.formatUnits(bal, 18));
+  }, [address]);
   useEffect(() => {
-
-    fetchBalance()
-  }, [address])
+    fetchBalance();
+  }, [address, fetchBalance]);
 
   const { writeContract, isPending, isError, error, data } = useWriteContract();
 
   const handleTransfer = async () => {
     if (!recipient || !isAddress(recipient)) {
-      toast.error('Please enter a valid Ethereum address');
+      toast.error("Please enter a valid Ethereum address");
       return;
     }
     try {
       writeContract({
         address: ContractAddress,
         abi: ABI,
-        functionName: 'transfer',
-        args: [recipient,parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+        functionName: "transfer",
+        args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
       });
       setAmount("");
-      setRecipient("")
-      toast.success("transfered successfully")
-    } catch (err:unknown) {
-      toast.error("failed to transfer")
-      if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
-        if ('message' in err) {
+      setRecipient("");
+      toast.success("transfered successfully");
+    } catch (err: unknown) {
+      toast.error("failed to transfer");
+      if (
+        err &&
+        typeof err === "object" &&
+        "name" in err &&
+        err.name === "ContractFunctionRevertedError"
+      ) {
+        if ("message" in err) {
           console.error("Revert Reason:", err.message);
         }
       }
@@ -96,7 +100,7 @@ export default function TransferPage() {
                         className="mt-1"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="amount">Amount</Label>
                       <Input
@@ -112,12 +116,12 @@ export default function TransferPage() {
                       </p>
                     </div>
 
-                    <Button 
+                    <Button
                       onClick={handleTransfer}
                       disabled={!recipient || !amount || isPending}
                       className="w-full"
                     >
-                      {isPending ? 'Sending...' : 'Send Tokens'}
+                      {isPending ? "Sending..." : "Send Tokens"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -129,7 +133,9 @@ export default function TransferPage() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Your Balance:</span>
+                        <span className="text-muted-foreground">
+                          Your Balance:
+                        </span>
                         <span>{balance} tokens</span>
                       </div>
                       <div className="flex justify-between">
@@ -145,7 +151,8 @@ export default function TransferPage() {
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Double-check the recipient address. Transactions cannot be reversed.
+                        Double-check the recipient address. Transactions cannot
+                        be reversed.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -157,15 +164,17 @@ export default function TransferPage() {
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription className="break-words">
-                          {error?.message ? 
-                          (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
-                          : "Transaction failed"}
+                          {error?.message
+                            ? typeof error.message === "string"
+                              ? error.message
+                              : JSON.stringify(error.message)
+                            : "Transaction failed"}
                         </AlertDescription>
                       </Alert>
                     </CardContent>
                   </Card>
                 )}
-                                
+
                 {!isPending && data && (
                   <Card className="md:col-span-2">
                     <CardContent className="pt-4">
@@ -174,7 +183,7 @@ export default function TransferPage() {
                         <AlertDescription className="flex flex-col">
                           <span>Transaction successful!</span>
                           <span className="text-xs text-muted-foreground break-all mt-1">
-                          Hash: {data}
+                            Hash: {data}
                           </span>
                         </AlertDescription>
                       </Alert>

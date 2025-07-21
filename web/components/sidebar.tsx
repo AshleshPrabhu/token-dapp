@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   Coins,
   Home,
@@ -12,16 +12,16 @@ import {
   Shield,
   History,
   CreditCard,
-} from 'lucide-react';
+} from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Mint', href: '/dashboard/mint', icon: Plus },
-  { name: 'Burn', href: '/dashboard/burn', icon: Flame },
-  { name: 'Transfer', href: '/dashboard/transfer', icon: Send },
-  { name: 'Balance', href: '/dashboard/balance', icon: CreditCard },
-  { name: 'Allowance', href: '/dashboard/allowance', icon: Shield },
-  { name: 'History', href: '/history', icon: History },
+  { name: "Dashboard", href: "/", icon: Home },
+  { name: "Mint", href: "/dashboard/mint", icon: Plus },
+  { name: "Burn", href: "/dashboard/burn", icon: Flame },
+  { name: "Transfer", href: "/dashboard/transfer", icon: Send },
+  { name: "Balance", href: "/dashboard/balance", icon: CreditCard },
+  { name: "Allowance", href: "/dashboard/allowance", icon: Shield },
+  { name: "History", href: "/history", icon: History },
 ];
 
 export function Sidebar() {
@@ -45,16 +45,18 @@ export function Sidebar() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
+                    "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors",
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                   )}
                 >
                   <item.icon
                     className={cn(
-                      'mr-3 h-4 w-4 flex-shrink-0',
-                      isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                      "mr-3 h-4 w-4 flex-shrink-0",
+                      isActive
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground",
                     )}
                   />
                   {item.name}

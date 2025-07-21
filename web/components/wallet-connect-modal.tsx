@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Wallet } from 'lucide-react';
-import { useConnect } from "wagmi"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Wallet } from "lucide-react";
+import { useConnect } from "wagmi";
 
 interface WalletConnectModalProps {
   isOpen: boolean;
@@ -37,8 +42,11 @@ interface WalletConnectModalProps {
 //   }
 // ];
 
-export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps) {
-  const {connectors,connect} = useConnect()
+export function WalletConnectModal({
+  isOpen,
+  onClose,
+}: WalletConnectModalProps) {
+  const { connectors, connect } = useConnect();
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -50,7 +58,8 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
         </DialogHeader>
         <div className="space-y-3 mt-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Choose your preferred wallet to connect and start managing your tokens.
+            Choose your preferred wallet to connect and start managing your
+            tokens.
           </p>
           {connectors.map((connector) => (
             <Button
@@ -58,7 +67,7 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
               variant="outline"
               className="w-full justify-start h-auto p-4"
               onClick={() => {
-                connect({connector})
+                connect({ connector });
               }}
             >
               <Wallet className="h-5 w-5 mr-3" />
@@ -71,7 +80,8 @@ export function WalletConnectModal({ isOpen, onClose }: WalletConnectModalProps)
         </div>
         <div className="mt-6 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">
-            By connecting your wallet, you agree to our Terms of Service and Privacy Policy.
+            By connecting your wallet, you agree to our Terms of Service and
+            Privacy Policy.
           </p>
         </div>
       </DialogContent>

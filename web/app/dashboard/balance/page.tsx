@@ -1,58 +1,65 @@
-'use client';
+"use client";
 
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { CreditCard, Search, Wallet, TrendingUp, TrendingDown, CheckCircle, AlertCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useAccount, useWriteContract } from 'wagmi';
-import tokenContract from '@/utils/contract';
-import { ethers, parseUnits } from 'ethers';
-import { toast } from 'sonner';
-import ABI, { ContractAddress } from '@/utils/abi';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { readContract } from 'viem/actions';
-import { createPublicClient, http } from 'viem';
-import { sepolia } from 'viem/chains';
-import { isAddress } from 'ethers';
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  CreditCard,
+  Search,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAccount, useWriteContract } from "wagmi";
+import tokenContract from "@/utils/contract";
+import { ethers, parseUnits } from "ethers";
+import { toast } from "sonner";
+import ABI, { ContractAddress } from "@/utils/abi";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { readContract } from "viem/actions";
+import { createPublicClient, http } from "viem";
+import { sepolia } from "viem/chains";
+import { isAddress } from "ethers";
 export default function BalancePage() {
-  const [searchAddress, setSearchAddress] = useState('');
-  const { address } = useAccount()
-  const [balance, setBalance] = useState('')
-  const client = createPublicClient({ 
+  const [searchAddress, setSearchAddress] = useState("");
+  const { address } = useAccount();
+  const [balance, setBalance] = useState("");
+  const client = createPublicClient({
     chain: sepolia,
-    transport: http("https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37")
+    transport: http(
+      "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37",
+    ),
   });
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) return
-      const bal = await tokenContract.balanceOf(address)
-      setBalance(ethers.formatUnits(bal, 18))
-    }
+      if (!address) return;
+      const bal = await tokenContract.balanceOf(address);
+      setBalance(ethers.formatUnits(bal, 18));
+    };
 
-    fetchBalance()
-  }, [address])
+    fetchBalance();
+  }, [address]);
 
   const handleSearch = async () => {
     if (!searchAddress || !isAddress(searchAddress)) {
-      toast.error('Please enter a valid Ethereum address');
+      toast.error("Please enter a valid Ethereum address");
       return;
     }
 
     try {
-      const result = await readContract(
-        client,
-        {
-          address: ContractAddress,
-          abi: ABI,
-          functionName: 'balanceOf',
-          args: [searchAddress],
-        }
-      );
+      const result = await readContract(client, {
+        address: ContractAddress,
+        abi: ABI,
+        functionName: "balanceOf",
+        args: [searchAddress],
+      });
 
       const formattedBalance = ethers.formatUnits(result as bigint, 18);
       setBalance(formattedBalance);
@@ -60,7 +67,7 @@ export default function BalancePage() {
       toast.error("Failed to fetch balance");
       console.error(err);
     }
-};
+  };
   // useEffect(()=>{
   //   if(!isPending && data){
   //     console.log(data)
@@ -104,7 +111,7 @@ export default function BalancePage() {
                         />
                       </div>
                       <div className="flex items-end">
-                        <Button onClick={()=>handleSearch()}>
+                        <Button onClick={() => handleSearch()}>
                           <Search className="h-4 w-4 mr-2" />
                           Check
                         </Button>
@@ -159,7 +166,6 @@ export default function BalancePage() {
                     </Card>
                   )} */}
                 </div>
-
               </div>
             </div>
           </main>

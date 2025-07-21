@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { History, Search, ExternalLink, Filter } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import tokenContract, { provider } from '@/utils/contract';
-import { formatUnits } from 'ethers';
+import { useEffect, useState } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { History, Search, ExternalLink, Filter } from "lucide-react";
+import { useAccount } from "wagmi";
+import tokenContract, { provider } from "@/utils/contract";
+import { formatUnits } from "ethers";
 
 interface Transaction {
   id: string;
@@ -18,40 +18,40 @@ interface Transaction {
   from: string;
   to: string;
   amount: string;
-  type: 'Transfer' | 'Mint' | 'Burn';
+  type: "Transfer" | "Mint" | "Burn";
   timestamp: string;
-  status: 'Success' | 'Failed';
+  status: "Success" | "Failed";
 }
 
 export default function HistoryPage() {
   const { address } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const getOrStoreInLocalStorage = async() => {
+  const getOrStoreInLocalStorage = async () => {
     const data = localStorage.getItem("transactions");
     if (data) {
       const parsedData = JSON.parse(data);
       const oldDate = new Date(parsedData.timestamp);
       const currentDate = new Date();
 
-      if ((currentDate.getTime() - oldDate.getTime()) < 24 * 60 * 60 * 1000) {
+      if (currentDate.getTime() - oldDate.getTime() < 24 * 60 * 60 * 1000) {
         setTransactions(parsedData.transactions);
-        return
+        return;
       }
     }
-    const transactions = await getTransactions()
+    const transactions = await getTransactions();
     if (transactions && Array.isArray(transactions)) {
       setTransactions(transactions);
       const newData = {
         timestamp: new Date().toISOString(),
-        transactions
+        transactions,
       };
       localStorage.setItem("transactions", JSON.stringify(newData));
     }
-  }
+  };
 
   const getTransactions = async () => {
-    console.log(address)
+    console.log(address);
     if (!address) return;
     try {
       const fromBlock = 8700000;
@@ -60,18 +60,18 @@ export default function HistoryPage() {
       let allLogs: any[] = [];
 
       for (let start = fromBlock; start <= latestBlock; start += chunkSize) {
-        console.log(start)
+        console.log(start);
         const end = Math.min(start + chunkSize - 1, latestBlock);
 
         const sentLogs = await tokenContract.queryFilter(
           tokenContract.filters.Transfer(address, null),
           start,
-          end
+          end,
         );
         const receivedLogs = await tokenContract.queryFilter(
           tokenContract.filters.Transfer(null, address),
           start,
-          end
+          end,
         );
 
         allLogs.push(...sentLogs, ...receivedLogs);
@@ -83,31 +83,30 @@ export default function HistoryPage() {
         .map((log, index) => {
           const { from, to, value } = log.args;
           const type =
-            from === '0x0000000000000000000000000000000000000000'
-              ? 'Mint'
-              : to === '0x0000000000000000000000000000000000000000'
-              ? 'Burn'
-              : 'Transfer';
+            from === "0x0000000000000000000000000000000000000000"
+              ? "Mint"
+              : to === "0x0000000000000000000000000000000000000000"
+                ? "Burn"
+                : "Transfer";
 
           return {
             id: `${log.transactionHash}-${index}`,
             hash: log.transactionHash,
             from,
             to,
-            amount: formatUnits(value, 18), // TODO:  
+            amount: formatUnits(value, 18), // TODO:
             type,
             timestamp: `Block #${log.blockNumber}`,
-            status: 'Success',
+            status: "Success",
           };
         });
 
       // setTransactions(parsedTxs);
       return parsedTxs;
     } catch (err) {
-      console.error(' Error while fetching transactions:', err);
+      console.error(" Error while fetching transactions:", err);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,7 +126,7 @@ export default function HistoryPage() {
                     View all token transactions and activities
                   </p>
                 </div>
-                <Button onClick={()=>getOrStoreInLocalStorage()}>
+                <Button onClick={() => getOrStoreInLocalStorage()}>
                   <Search className="h-4 w-4 mr-2" />
                   Get Transactions
                 </Button>
@@ -147,11 +146,11 @@ export default function HistoryPage() {
                         <div className="flex items-center space-x-4">
                           <Badge
                             variant={
-                              tx.type === 'Transfer'
-                                ? 'default'
-                                : tx.type === 'Mint'
-                                ? 'secondary'
-                                : 'destructive'
+                              tx.type === "Transfer"
+                                ? "default"
+                                : tx.type === "Mint"
+                                  ? "secondary"
+                                  : "destructive"
                             }
                           >
                             {tx.type}
@@ -159,7 +158,8 @@ export default function HistoryPage() {
                           <div>
                             <p className="font-medium">{tx.amount} tokens</p>
                             <p className="text-sm text-muted-foreground">
-                              From: {tx.from.slice(0, 6)}...{tx.from.slice(-4)} → To: {tx.to.slice(0, 6)}...
+                              From: {tx.from.slice(0, 6)}...{tx.from.slice(-4)}{" "}
+                              → To: {tx.to.slice(0, 6)}...
                               {tx.to.slice(-4)}
                             </p>
                           </div>
@@ -187,13 +187,14 @@ export default function HistoryPage() {
                   </div>
 
                   {transactions.length === 0 && (
-                    <div className="text-center text-muted-foreground mt-4">No transactions found.</div>
+                    <div className="text-center text-muted-foreground mt-4">
+                      No transactions found.
+                    </div>
                   )}
                 </CardContent>
               </Card>
             </div>
           </main>
-
         </div>
       </div>
     </div>

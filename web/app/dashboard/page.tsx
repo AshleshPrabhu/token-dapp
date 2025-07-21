@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { TokenInfo } from '@/components/token-info';
-import { TokenMetadata } from '@/components/token-metadata';
-import { DashboardContent } from '@/components/dashboard-content';
-import { WalletConnectModal } from '@/components/wallet-connect-modal';
-import { useAccount } from 'wagmi';
+import { useState, useEffect } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { TokenInfo } from "@/components/token-info";
+import { TokenMetadata } from "@/components/token-metadata";
+import { DashboardContent } from "@/components/dashboard-content";
+import { WalletConnectModal } from "@/components/wallet-connect-modal";
+import { useAccount } from "wagmi";
 
 export default function Dashboard() {
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -35,7 +35,9 @@ export default function Dashboard() {
           <main className="flex-1 p-6">
             <div className="max-w-7xl mx-auto">
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Dashboard
+                </h1>
                 <p className="text-muted-foreground mt-1">
                   {isConnected
                     ? "Welcome to your token management dashboard"

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Wallet, CheckCircle, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { MobileSidebar } from '@/components/mobile-sidebar';
-import { useAccount, useDisconnect } from 'wagmi';
+import { Wallet, CheckCircle, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileSidebar } from "@/components/mobile-sidebar";
+import { useAccount, useDisconnect } from "wagmi";
 
 export function Header() {
   const { isConnected } = useAccount();

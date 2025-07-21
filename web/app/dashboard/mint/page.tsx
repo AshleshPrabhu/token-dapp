@@ -1,51 +1,56 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useWriteContract } from 'wagmi';
-import { parseUnits } from 'viem';
-import ABI, { ContractAddress } from '@/utils/abi';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useWriteContract } from "wagmi";
+import { parseUnits } from "viem";
+import ABI, { ContractAddress } from "@/utils/abi";
+import { toast } from "sonner";
 
 export default function MintPage() {
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
 
   const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleMint = async () => {
-  try {
-    writeContract({
-      address: ContractAddress,
-      abi: ABI,
-      functionName: 'mint',
-      args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
-    });
-    // console.log("Mint initiated",data);
-    toast.success("minted successfully")
-  } catch (err: unknown) {
-    // console.error("Mint failed:", err);
-    toast.error("failed to mint")
-    if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
-      if ('message' in err) {
-        console.error("Revert Reason:", err.message);
+    try {
+      writeContract({
+        address: ContractAddress,
+        abi: ABI,
+        functionName: "mint",
+        args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
+      });
+      // console.log("Mint initiated",data);
+      toast.success("minted successfully");
+    } catch (err: unknown) {
+      // console.error("Mint failed:", err);
+      toast.error("failed to mint");
+      if (
+        err &&
+        typeof err === "object" &&
+        "name" in err &&
+        err.name === "ContractFunctionRevertedError"
+      ) {
+        if ("message" in err) {
+          console.error("Revert Reason:", err.message);
+        }
       }
     }
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header  />
+          <Header />
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto">
               <div className="mb-8">
@@ -74,7 +79,7 @@ export default function MintPage() {
                         className="mt-1"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="amount">Amount to Mint</Label>
                       <Input
@@ -87,12 +92,12 @@ export default function MintPage() {
                       />
                     </div>
 
-                    <Button 
+                    <Button
                       onClick={handleMint}
                       disabled={!recipient || !amount || isPending}
                       className="w-full"
                     >
-                      {isPending ? 'Minting...' : 'Mint Tokens'}
+                      {isPending ? "Minting..." : "Mint Tokens"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -105,10 +110,11 @@ export default function MintPage() {
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Only authorized addresses can mint new tokens. Make sure you have the required permissions.
+                        Only authorized addresses can mint new tokens. Make sure
+                        you have the required permissions.
                       </AlertDescription>
                     </Alert>
-                    
+
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         {/* <span className="text-muted-foreground">Gas Fee:</span>
@@ -119,7 +125,9 @@ export default function MintPage() {
                         <span>Ethereum Sepolia</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Confirmation Time:</span>
+                        <span className="text-muted-foreground">
+                          Confirmation Time:
+                        </span>
                         <span>~30 seconds</span>
                       </div>
                     </div>
@@ -128,32 +136,34 @@ export default function MintPage() {
 
                 {isError && (
                   <Card className="md:col-span-2">
-                  <CardContent className="pt-4">
-                    <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="break-words">
-                      {error?.message ? 
-                      (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
-                      : "Transaction failed"}
-                    </AlertDescription>
-                    </Alert>
-                  </CardContent>
+                    <CardContent className="pt-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="break-words">
+                          {error?.message
+                            ? typeof error.message === "string"
+                              ? error.message
+                              : JSON.stringify(error.message)
+                            : "Transaction failed"}
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
                   </Card>
                 )}
 
                 {!isPending && data && (
                   <Card className="md:col-span-2">
-                  <CardContent className="pt-4">
-                    <Alert>
-                    <CheckCircle className="h-4 w-4" />
-                    <AlertDescription className="flex flex-col">
-                      <span>Transaction successful!</span>
-                      <span className="text-xs text-muted-foreground break-all mt-1">
-                      Hash: {data}
-                      </span>
-                    </AlertDescription>
-                    </Alert>
-                  </CardContent>
+                    <CardContent className="pt-4">
+                      <Alert>
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertDescription className="flex flex-col">
+                          <span>Transaction successful!</span>
+                          <span className="text-xs text-muted-foreground break-all mt-1">
+                            Hash: {data}
+                          </span>
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
                   </Card>
                 )}
               </div>

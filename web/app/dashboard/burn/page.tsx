@@ -1,49 +1,54 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Header } from '@/components/header';
-import { Sidebar } from '@/components/sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Flame, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAccount, useEnsAddress, useWriteContract } from 'wagmi';
-import ABI, { ContractAddress } from '@/utils/abi';
-import { parseUnits } from 'viem';
-import { toast } from 'sonner';
-import tokenContract from '@/utils/contract';
-import { ethers } from 'ethers';
+import { useEffect, useState } from "react";
+import { Header } from "@/components/header";
+import { Sidebar } from "@/components/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Flame, AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAccount, useEnsAddress, useWriteContract } from "wagmi";
+import ABI, { ContractAddress } from "@/utils/abi";
+import { parseUnits } from "viem";
+import { toast } from "sonner";
+import tokenContract from "@/utils/contract";
+import { ethers } from "ethers";
 
 export default function BurnPage() {
-  const [amount, setAmount] = useState('');
-  const { address } = useAccount()
-  const [balance, setBalance] = useState('')
+  const [amount, setAmount] = useState("");
+  const { address } = useAccount();
+  const [balance, setBalance] = useState("");
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) return
-      const bal = await tokenContract.balanceOf(address)
-      setBalance(ethers.formatUnits(bal, 18))
-    }
+      if (!address) return;
+      const bal = await tokenContract.balanceOf(address);
+      setBalance(ethers.formatUnits(bal, 18));
+    };
 
-    fetchBalance()
-  }, [address])
+    fetchBalance();
+  }, [address]);
   const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleBurn = async () => {
     try {
       writeContract({
         address: ContractAddress,
         abi: ABI,
-        functionName: 'burn',
+        functionName: "burn",
         args: [parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
       });
-      toast.success("burned successfully")
-    } catch (err:unknown) {
-      toast.error("failed to burn")
-      if (err && typeof err === 'object' && 'name' in err && err.name === 'ContractFunctionRevertedError') {
-        if ('message' in err) {
+      toast.success("burned successfully");
+    } catch (err: unknown) {
+      toast.error("failed to burn");
+      if (
+        err &&
+        typeof err === "object" &&
+        "name" in err &&
+        err.name === "ContractFunctionRevertedError"
+      ) {
+        if ("message" in err) {
           console.error("Revert Reason:", err.message);
         }
       }
@@ -55,7 +60,7 @@ export default function BurnPage() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <Header  />
+          <Header />
           <main className="flex-1 p-6">
             <div className="max-w-4xl mx-auto">
               <div className="mb-8">
@@ -69,7 +74,6 @@ export default function BurnPage() {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-
                 <Card>
                   <CardHeader>
                     <CardTitle>Burn Tokens</CardTitle>
@@ -78,7 +82,8 @@ export default function BurnPage() {
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Warning:</strong> Burning tokens is irreversible. Tokens will be permanently destroyed.
+                        <strong>Warning:</strong> Burning tokens is
+                        irreversible. Tokens will be permanently destroyed.
                       </AlertDescription>
                     </Alert>
 
@@ -98,20 +103,23 @@ export default function BurnPage() {
                     </div>
 
                     <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                      <h4 className="font-medium text-destructive mb-2">Confirm Burn</h4>
+                      <h4 className="font-medium text-destructive mb-2">
+                        Confirm Burn
+                      </h4>
                       <p className="text-sm text-muted-foreground">
-                        You are about to burn <strong>{amount || '0'}</strong> tokens. 
-                        This action cannot be undone and will reduce the total supply.
+                        You are about to burn <strong>{amount || "0"}</strong>{" "}
+                        tokens. This action cannot be undone and will reduce the
+                        total supply.
                       </p>
                     </div>
 
-                    <Button 
+                    <Button
                       onClick={handleBurn}
                       disabled={!amount || isPending}
                       variant="destructive"
                       className="w-full"
                     >
-                      {isPending ? 'Burning...' : 'Burn Tokens'}
+                      {isPending ? "Burning..." : "Burn Tokens"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -122,15 +130,17 @@ export default function BurnPage() {
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription className="break-words">
-                          {error?.message ? 
-                          (typeof error.message === 'string' ? error.message : JSON.stringify(error.message)) 
-                          : "Transaction failed"}
+                          {error?.message
+                            ? typeof error.message === "string"
+                              ? error.message
+                              : JSON.stringify(error.message)
+                            : "Transaction failed"}
                         </AlertDescription>
                       </Alert>
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {!isPending && data && (
                   <Card className="md:col-span-2">
                     <CardContent className="pt-4">
@@ -139,7 +149,7 @@ export default function BurnPage() {
                         <AlertDescription className="flex flex-col">
                           <span>Transaction successful!</span>
                           <span className="text-xs text-muted-foreground break-all mt-1">
-                          Hash: {data}
+                            Hash: {data}
                           </span>
                         </AlertDescription>
                       </Alert>
