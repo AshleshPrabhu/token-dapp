@@ -16,6 +16,7 @@ import { parseUnits, createPublicClient, http, isAddress } from "viem";
 import { toast } from "sonner";
 import { sepolia } from "viem/chains";
 import { readContract } from "viem/actions";
+import { WalletConnectModal } from "@/components/wallet-connect-modal";
 
 export default function AllowancePage() {
   const [spender, setSpender] = useState("");
@@ -23,6 +24,21 @@ export default function AllowancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
+  // const [showWalletModal, setShowWalletModal] = useState(false);
+  // const [hasMounted, setHasMounted] = useState(false);
+  // const { isConnected } = useAccount();
+
+  // useEffect(() => {
+  //   setHasMounted(true);
+  // }, []);
+
+  // useEffect(() => {
+  //   if (hasMounted) {
+  //     setShowWalletModal(!isConnected);
+  //   }
+  // }, [isConnected, hasMounted]);
+
+
   const client = createPublicClient({
     chain: sepolia,
     transport: http(
@@ -232,6 +248,10 @@ export default function AllowancePage() {
           </main>
         </div>
       </div>
+      {/* <WalletConnectModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      /> */}
     </div>
   );
 }

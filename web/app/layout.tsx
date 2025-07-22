@@ -25,7 +25,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <WagmiConfigProvider>{children}</WagmiConfigProvider>
+          <WagmiConfigProvider>
+            {children}
+          </WagmiConfigProvider>
         </ThemeProvider>
       </body>
     </html>

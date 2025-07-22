@@ -1,31 +1,12 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { TokenInfo } from "@/components/token-info";
 import { TokenMetadata } from "@/components/token-metadata";
-import { DashboardContent } from "@/components/dashboard-content";
-import { WalletConnectModal } from "@/components/wallet-connect-modal";
 import { useAccount } from "wagmi";
 
 export default function Dashboard() {
-  const [showWalletModal, setShowWalletModal] = useState(false);
-  const [hasMounted, setHasMounted] = useState(false);
-  const { isConnected } = useAccount();
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (hasMounted) {
-      setShowWalletModal(!isConnected);
-    }
-  }, [isConnected, hasMounted]);
-
-  if (!hasMounted) return null;
-
+  const { isConnected } = useAccount()
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
@@ -53,11 +34,6 @@ export default function Dashboard() {
           </main>
         </div>
       </div>
-
-      <WalletConnectModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-      />
     </div>
   );
 }
