@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WagmiConfigProvider } from "./wagmi-config-provider";
+import ContractContextProvider from "./context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +27,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <WagmiConfigProvider>
-            {children}
+            <ContractContextProvider>
+              {children}
+            </ContractContextProvider>
           </WagmiConfigProvider>
         </ThemeProvider>
       </body>

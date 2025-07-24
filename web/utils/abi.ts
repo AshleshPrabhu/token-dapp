@@ -1,4 +1,11 @@
-const ABI = [
+"use client"
+
+import { ContractContext } from "@/app/context";
+import { useContext, useEffect, useState } from "react";
+import { Abi } from "viem";
+
+export function useContractABI() {
+  const [ABI, setABI] = useState( [
   {
     type: "constructor",
     inputs: [
@@ -428,7 +435,46 @@ const ABI = [
       },
     ],
   },
-];
+]);
+  const {contractAddress, contractNetwork} = useContext(ContractContext);
+  
+  useEffect(() => {
+    const getAbi = () => {
+      let url;
+      if(contractNetwork === "Ethereum Sepolia"){
+        url = `https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}`;
+      }else{
+        url = `https://api-mainnet.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}`;
+      }
+      
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.status == "1"){
+            console.log(JSON.parse(data.result));
+            setABI(data.result);
+          }
+          else
+            console.log(data.result);
+        })
+        .catch(error => {
+          console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+    
+    getAbi();
+  }, [contractAddress, contractNetwork]);
 
-export default ABI;
-export const ContractAddress = "0x31b2da62a1fccb0d99eeaf0940a3127045a86830";
+  return { ABI, contractAddress };
+}
+
+export function useContractAddress() {
+  const {contractAddress} = useContext(ContractContext);
+  return contractAddress;
+} 
+

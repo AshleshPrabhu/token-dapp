@@ -15,21 +15,27 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useAccount, useWriteContract } from "wagmi";
-import tokenContract from "@/utils/contract";
+// import tokenContract from "@/utils/contract";
 import { ethers, parseUnits } from "ethers";
 import { toast } from "sonner";
-import ABI, { ContractAddress } from "@/utils/abi";
+// import ABI, { ContractAddress } from "@/utils/abi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { readContract } from "viem/actions";
 import { createPublicClient, http } from "viem";
 import { sepolia } from "viem/chains";
 import { isAddress } from "ethers";
+import { ContractContext } from "@/app/context";
+import { getContract } from "@/utils/contract";
+import { useContractABI } from "@/utils/abi";
 export default function BalancePage() {
   const [searchAddress, setSearchAddress] = useState("");
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
+  const { contractAddress, contractNetwork } = useContext(ContractContext);
+  const tokenContract = getContract(contractAddress, contractNetwork);
+  const {ABI,contractAddress:ContractAddress} = useContractABI()
   const client = createPublicClient({
     chain: sepolia,
     transport: http(
@@ -55,7 +61,7 @@ export default function BalancePage() {
 
     try {
       const result = await readContract(client, {
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "balanceOf",
         args: [searchAddress],

@@ -1,6 +1,8 @@
-1. add enter contract input field 
-2. fetch the abi from etherscan api
-3. accordinly show the details , dont allow to mint if not owner
-4. rest other fields are fine
-5. add allowance section - where we can check the allowance history 
-6. add transaction history -> idk what is it check it once
+1. add enter contract input field -------------> done
+2. fetch the abi from etherscan api ---------------->done
+3. accordinly show the details , dont allow to mint if not owner -------> done
+4. rest other fields are fine 
+5. add allowance section - where we can check the allowance history  ----------------> done
+6. add transaction history -> idk what is it check it once  ------------> done
+7. fix errors if wrong combination of inputs
+8. abi.ts errors for invalid api key

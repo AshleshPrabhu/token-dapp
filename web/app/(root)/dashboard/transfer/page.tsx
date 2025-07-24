@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,18 +11,23 @@ import { Send, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { useAccount, useWriteContract } from "wagmi";
-import tokenContract from "@/utils/contract";
-import ABI, { ContractAddress } from "@/utils/abi";
+// import tokenContract from "@/utils/contract";
+// import ABI, { ContractAddress } from "@/utils/abi";
 import { parseUnits } from "viem";
 import { ethers, isAddress } from "ethers";
 import { toast } from "sonner";
+import { ContractContext } from "@/app/context";
+import { getContract } from "@/utils/contract";
+import { useContractABI } from "@/utils/abi";
 
 export default function TransferPage() {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
-
+  const { contractAddress, contractNetwork } = useContext(ContractContext);
+  const tokenContract = getContract(contractAddress, contractNetwork);
+  const {ABI,contractAddress:ContractAddress} = useContractABI()
   const fetchBalance = useCallback(async () => {
     if (!address) return;
     console.log("a");
@@ -42,7 +47,7 @@ export default function TransferPage() {
     }
     try {
       writeContract({
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "transfer",
         args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode

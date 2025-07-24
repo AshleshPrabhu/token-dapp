@@ -11,12 +11,13 @@ import { Shield, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ethers } from "ethers";
 import { useAccount, useWriteContract } from "wagmi";
-import ABI, { ContractAddress } from "@/utils/abi";
+// import ABI, { ContractAddress } from "@/utils/abi";
 import { parseUnits, createPublicClient, http, isAddress } from "viem";
 import { toast } from "sonner";
 import { sepolia } from "viem/chains";
 import { readContract } from "viem/actions";
 import { WalletConnectModal } from "@/components/wallet-connect-modal";
+import { useContractABI } from "@/utils/abi";
 
 export default function AllowancePage() {
   const [spender, setSpender] = useState("");
@@ -24,6 +25,7 @@ export default function AllowancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
+  const {ABI,contractAddress:ContractAddress} = useContractABI()
   // const [showWalletModal, setShowWalletModal] = useState(false);
   // const [hasMounted, setHasMounted] = useState(false);
   // const { isConnected } = useAccount();
@@ -51,7 +53,7 @@ export default function AllowancePage() {
   const handleApprove = async () => {
     try {
       writeContract({
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "approve",
         args: [spender, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode
@@ -77,18 +79,22 @@ export default function AllowancePage() {
   const checkAllowance = async () => {
     try {
       if (!spender || !isAddress(spender)) {
+        console.log("B")
         toast.error("Please enter a valid Ethereum address");
         return;
       }
       setIsLoading(true);
+      console.log("A")
       const result = await readContract(client, {
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "allowance",
         args: [address, spender],
       });
 
       const formattedBalance = ethers.formatUnits(result as bigint, 18);
+      console.log("result",result)
+      console.log(formattedBalance)
       setBalance(formattedBalance);
     } catch (error) {
       console.log(error);
@@ -189,6 +195,8 @@ export default function AllowancePage() {
                         id="checkSpender"
                         placeholder="0x..."
                         className="mt-1"
+                        value={spender}
+                        onChange={(e)=>setSpender(e.target.value)}
                       />
                     </div>
 

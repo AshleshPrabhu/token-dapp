@@ -11,18 +11,19 @@ import { Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useWriteContract } from "wagmi";
 import { parseUnits } from "viem";
-import ABI, { ContractAddress } from "@/utils/abi";
+// import ABI, { ContractAddress } from "@/utils/abi";
 import { toast } from "sonner";
+import { useContractABI } from "@/utils/abi";
 
 export default function MintPage() {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-
+  const {ABI,contractAddress:ContractAddress} = useContractABI()
   const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleMint = async () => {
     try {
       writeContract({
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "mint",
         args: [recipient, parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode

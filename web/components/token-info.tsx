@@ -2,16 +2,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Hash, FileText, Globe } from "lucide-react";
-import tokenContract from "@/utils/contract";
-import { useEffect, useState } from "react";
+// import tokenContract from "@/utils/contract";
+import { useContext, useEffect, useState } from "react";
 import { formatUnits } from "ethers";
+import { ContractContext } from "@/app/context";
+import { getContract } from "@/utils/contract";
 
 export function TokenInfo() {
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [decimals, setDecimals] = useState(18);
   const [totalSupply, setTotalSupply] = useState("0.0");
-
+  const { contractAddress, contractNetwork } = useContext(ContractContext);
+  const tokenContract = getContract(contractAddress, contractNetwork);
   const getDetails = async () => {
     const name = await tokenContract.name();
     const symbol = await tokenContract.symbol();

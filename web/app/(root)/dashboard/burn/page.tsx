@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,17 +10,22 @@ import { Label } from "@/components/ui/label";
 import { Flame, AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAccount, useEnsAddress, useWriteContract } from "wagmi";
-import ABI, { ContractAddress } from "@/utils/abi";
+// import ABI, { ContractAddress } from "@/utils/abi";
 import { parseUnits } from "viem";
 import { toast } from "sonner";
-import tokenContract from "@/utils/contract";
+// import tokenContract from "@/utils/contract";
 import { ethers } from "ethers";
+import { ContractContext } from "@/app/context";
+import { getContract } from "@/utils/contract";
+import { useContractABI } from "@/utils/abi";
 
 export default function BurnPage() {
   const [amount, setAmount] = useState("");
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
-
+  const { contractAddress, contractNetwork } = useContext(ContractContext);
+  const tokenContract = getContract(contractAddress, contractNetwork);
+  const {ABI,contractAddress:ContractAddress} = useContractABI()
   useEffect(() => {
     const fetchBalance = async () => {
       if (!address) return;
@@ -34,7 +39,7 @@ export default function BurnPage() {
   const handleBurn = async () => {
     try {
       writeContract({
-        address: ContractAddress,
+        address: ContractAddress as `0x${string}`,
         abi: ABI,
         functionName: "burn",
         args: [parseUnits(amount, 18)], //TODO:  here decimal should be taken from contract not hardcode

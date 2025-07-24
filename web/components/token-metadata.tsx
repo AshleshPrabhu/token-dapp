@@ -1,4 +1,5 @@
 "use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,20 +7,30 @@ import {
   Copy,
   ExternalLink,
   Shield,
-  Clock,
   Plus,
-  ArrowRight,
-  Coins,
-  Flame,
   Send,
-  Info,
-  History,
   CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useContext } from "react";
+import { ContractContext } from "@/app/context";
+import { Input } from "@/components/ui/input"; // Import Input component
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"; // Import Select components
 
 export function TokenMetadata() {
+  const {
+    contractAddress,
+    contractNetwork,
+    setContractAddress,
+    setContractNetwork,
+  } = useContext(ContractContext);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(contractAddress);
+    toast.success("Copied contract address to clipboard!");
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
@@ -33,29 +44,23 @@ export function TokenMetadata() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Contract Address Field */}
           <div>
             <label className="text-sm font-medium text-muted-foreground">
               Contract Address
             </label>
             <div className="flex items-center space-x-2 mt-1">
-              <code className="flex-1 text-sm bg-muted px-2 py-1 rounded cursor-pointer">
-                0x31b2da62a1fccb0d99eeaf0940a3127045a86830
-              </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    "0x31b2da62a1fccb0d99eeaf0940a3127045a86830",
-                  );
-                  toast.success("copied");
-                }}
-              >
+              <Input
+                value={contractAddress}
+                onChange={(e) => setContractAddress(e.target.value)}
+                className="text-sm"
+              />
+              <Button variant="ghost" size="sm" onClick={handleCopy}>
                 <Copy className="h-3 w-3" />
               </Button>
               <Button variant="ghost" size="sm">
                 <a
-                  href="https://sepolia.etherscan.io/address/0x31b2da62a1fccb0d99eeaf0940a3127045a86830"
+                  href={`https://sepolia.etherscan.io/address/${contractAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -65,15 +70,28 @@ export function TokenMetadata() {
             </div>
           </div>
 
+          {/* Contract Network Dropdown */}
           <div>
             <label className="text-sm font-medium text-muted-foreground">
               Network
             </label>
             <div className="mt-1">
-              <Badge variant="secondary">Ethereum Sepolia</Badge>
+              <Select
+                value={contractNetwork}
+                onValueChange={(value) => setContractNetwork(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a network" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ethereum Sepolia">Ethereum Sepolia</SelectItem>
+                  <SelectItem value="Ethereum Mainnet">Ethereum Mainnet</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
+          {/* Token Standard */}
           <div>
             <label className="text-sm font-medium text-muted-foreground">
               Token Standard
@@ -84,71 +102,37 @@ export function TokenMetadata() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Quick Actions
-            {/* <Button variant="ghost" size="sm">
-                      More
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button> */}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <Plus className="h-4 w-4 mr-2" />
-              <Link href="/dashboard/mint">Mint Tokens</Link>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/mint">
+                <Plus className="h-4 w-4 mr-2" />
+                Mint Tokens
+              </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Send className="h-4 w-4 mr-2" />
-              <Link href="/dashboard/transfer">Transfer Tokens</Link>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/transfer">
+                <Send className="h-4 w-4 mr-2" />
+                Transfer Tokens
+              </Link>
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <CreditCard className="h-4 w-4 mr-2" />
-              <Link href="/dashboard/balance">Check Balance</Link>
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link href="/dashboard/balance">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Check Balance
+              </Link>
             </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Token Metadata
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Description</label>
-            <p className="text-sm mt-1 text-muted-foreground">
-              Connect your wallet to view token metadata
-            </p>
-          </div>
-          
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Website</label>
-            <div className="mt-1">
-              <span className="text-sm text-muted-foreground">-</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Created</label>
-            <div className="mt-1">
-              <span className="text-sm text-muted-foreground">-</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
-            <div className="mt-1">
-              <span className="text-sm text-muted-foreground">-</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }

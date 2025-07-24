@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { History, Search, ExternalLink, Filter } from "lucide-react";
 import { useAccount } from "wagmi";
-import tokenContract, { provider } from "@/utils/contract";
+// import tokenContract, { provider } from "@/utils/contract";
 import { formatUnits } from "ethers";
+import { ContractContext } from "@/app/context";
+import { getContract, getProvider } from "@/utils/contract";
 
 interface Transaction {
   id: string;
@@ -26,6 +28,9 @@ interface Transaction {
 export default function HistoryPage() {
   const { address } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { contractAddress, contractNetwork } = useContext(ContractContext);
+  const tokenContract = getContract(contractAddress, contractNetwork);
+  const provider = getProvider(contractNetwork)
 
   const getOrStoreInLocalStorage = async () => {
     const data = localStorage.getItem("transactions");
