@@ -1,9 +1,7 @@
 "use client"
 import { ethers } from "ethers";
 
-import { useContractABI } from "@/utils/abi";
-export function getContract(contractAddress: string, contractNetwork: string) {
-    const {ABI} = useContractABI()
+export function getContract(contractAddress: string, contractNetwork: string, ABI: any) {
   let url;
   if (contractNetwork === "Ethereum Sepolia") {
     url = "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37";

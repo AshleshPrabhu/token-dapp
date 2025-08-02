@@ -17,6 +17,8 @@ import { useContext } from "react";
 import { ContractContext } from "@/app/context";
 import { Input } from "@/components/ui/input"; // Import Input component
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"; // Import Select components
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 export function TokenMetadata() {
   const {
@@ -24,6 +26,9 @@ export function TokenMetadata() {
     contractNetwork,
     setContractAddress,
     setContractNetwork,
+    isContractValid,
+    isContractLoading,
+    contractError,
   } = useContext(ContractContext);
 
   const handleCopy = () => {
@@ -60,7 +65,7 @@ export function TokenMetadata() {
               </Button>
               <Button variant="ghost" size="sm">
                 <a
-                  href={`https://sepolia.etherscan.io/address/${contractAddress}`}
+                  href={`https://${contractNetwork === "Ethereum Sepolia" ? "sepolia." : ""}etherscan.io/address/${contractAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -68,6 +73,36 @@ export function TokenMetadata() {
                 </a>
               </Button>
             </div>
+          </div>
+
+          {/* Contract Validation Status */}
+          <div>
+            {isContractLoading && (
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>
+                  Validating contract address...
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {!isContractLoading && isContractValid && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Contract is valid and accessible
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {!isContractLoading && !isContractValid && contractError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {contractError}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Contract Network Dropdown */}

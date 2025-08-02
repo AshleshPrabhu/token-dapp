@@ -13,6 +13,7 @@ import { useAccount } from "wagmi";
 import { formatUnits } from "ethers";
 import { ContractContext } from "@/app/context";
 import { getContract, getProvider } from "@/utils/contract";
+import { useContractABI } from "@/utils/abi";
 
 interface Transaction {
   id: string;
@@ -29,10 +30,12 @@ export default function HistoryPage() {
   const { address } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const { contractAddress, contractNetwork } = useContext(ContractContext);
-  const tokenContract = getContract(contractAddress, contractNetwork);
-  const provider = getProvider(contractNetwork)
+  const { ABI } = useContractABI();
+  const provider = getProvider(contractNetwork);
 
   const getOrStoreInLocalStorage = async () => {
+    if (!contractAddress || !ABI) return;
+    
     const data = localStorage.getItem("transactions");
     if (data) {
       const parsedData = JSON.parse(data);
@@ -57,8 +60,9 @@ export default function HistoryPage() {
 
   const getTransactions = async () => {
     console.log(address);
-    if (!address) return;
+    if (!address || !contractAddress || !ABI) return;
     try {
+      const tokenContract = getContract(contractAddress, contractNetwork, ABI);
       const fromBlock = 8700000;
       const latestBlock = await provider.getBlockNumber();
       const chunkSize = 500;

@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import WalletConnect from "../wallet-connect";
+import { ContractGuard } from "@/components/contract-guard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body className={inter.className}>
                 <WalletConnect/>
-                {children}
+                <ContractGuard>
+                    {children}
+                </ContractGuard>
             </body>
         </html>
     );

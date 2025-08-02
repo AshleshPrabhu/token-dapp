@@ -24,17 +24,23 @@ export default function BurnPage() {
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
   const { contractAddress, contractNetwork } = useContext(ContractContext);
-  const tokenContract = getContract(contractAddress, contractNetwork);
-  const {ABI,contractAddress:ContractAddress} = useContractABI()
+  const {ABI, contractAddress: ContractAddress} = useContractABI();
+  
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) return;
-      const bal = await tokenContract.balanceOf(address);
-      setBalance(ethers.formatUnits(bal, 18));
+      if (!address || !contractAddress || !ABI) return;
+      try {
+        const tokenContract = getContract(contractAddress, contractNetwork, ABI);
+        const bal = await tokenContract.balanceOf(address);
+        setBalance(ethers.formatUnits(bal, 18));
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setBalance("0.0");
+      }
     };
 
     fetchBalance();
-  }, [address]);
+  }, [address, contractAddress, contractNetwork, ABI]);
   const { writeContract, isPending, isError, error, data } = useWriteContract();
   const handleBurn = async () => {
     try {

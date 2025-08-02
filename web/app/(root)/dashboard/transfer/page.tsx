@@ -26,17 +26,24 @@ export default function TransferPage() {
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
   const { contractAddress, contractNetwork } = useContext(ContractContext);
-  const tokenContract = getContract(contractAddress, contractNetwork);
   const {ABI,contractAddress:ContractAddress} = useContractABI()
+  
   const fetchBalance = useCallback(async () => {
-    if (!address) return;
-    console.log("a");
-    const bal = await tokenContract.balanceOf(address);
-    setBalance(ethers.formatUnits(bal, 18));
-  }, [address]);
+    if (!address || !contractAddress || !ABI) return;
+    try {
+      console.log("Fetching balance for", address, "on", contractNetwork);
+      const tokenContract = getContract(contractAddress, contractNetwork, ABI);
+      const bal = await tokenContract.balanceOf(address);
+      setBalance(ethers.formatUnits(bal, 18));
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance("0.0");
+    }
+  }, [address, contractAddress, contractNetwork, ABI]);
+  
   useEffect(() => {
     fetchBalance();
-  }, [address, fetchBalance]);
+  }, [fetchBalance]);
 
   const { writeContract, isPending, isError, error, data } = useWriteContract();
 

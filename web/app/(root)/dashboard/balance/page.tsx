@@ -22,9 +22,6 @@ import { ethers, parseUnits } from "ethers";
 import { toast } from "sonner";
 // import ABI, { ContractAddress } from "@/utils/abi";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { readContract } from "viem/actions";
-import { createPublicClient, http } from "viem";
-import { sepolia } from "viem/chains";
 import { isAddress } from "ethers";
 import { ContractContext } from "@/app/context";
 import { getContract } from "@/utils/contract";
@@ -34,24 +31,23 @@ export default function BalancePage() {
   const { address } = useAccount();
   const [balance, setBalance] = useState("");
   const { contractAddress, contractNetwork } = useContext(ContractContext);
-  const tokenContract = getContract(contractAddress, contractNetwork);
-  const {ABI,contractAddress:ContractAddress} = useContractABI()
-  const client = createPublicClient({
-    chain: sepolia,
-    transport: http(
-      "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37",
-    ),
-  });
+  const {ABI, contractAddress: ContractAddress} = useContractABI();
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address) return;
-      const bal = await tokenContract.balanceOf(address);
-      setBalance(ethers.formatUnits(bal, 18));
+      if (!address || !contractAddress || !ABI) return;
+      try {
+        const tokenContract = getContract(contractAddress, contractNetwork, ABI);
+        const bal = await tokenContract.balanceOf(address);
+        setBalance(ethers.formatUnits(bal, 18));
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        setBalance("0.0");
+      }
     };
 
     fetchBalance();
-  }, [address]);
+  }, [address, contractAddress, contractNetwork, ABI]);
 
   const handleSearch = async () => {
     if (!searchAddress || !isAddress(searchAddress)) {
@@ -59,16 +55,17 @@ export default function BalancePage() {
       return;
     }
 
-    try {
-      const result = await readContract(client, {
-        address: ContractAddress as `0x${string}`,
-        abi: ABI,
-        functionName: "balanceOf",
-        args: [searchAddress],
-      });
+    if (!ContractAddress || !ABI) {
+      toast.error("Contract not loaded yet. Please wait.");
+      return;
+    }
 
-      const formattedBalance = ethers.formatUnits(result as bigint, 18);
+    try {
+      const tokenContract = getContract(ContractAddress, contractNetwork, ABI);
+      const result = await tokenContract.balanceOf(searchAddress);
+      const formattedBalance = ethers.formatUnits(result, 18);
       setBalance(formattedBalance);
+      toast.success(`Balance fetched for ${searchAddress.slice(0, 6)}...${searchAddress.slice(-4)}`);
     } catch (err) {
       toast.error("Failed to fetch balance");
       console.error(err);
