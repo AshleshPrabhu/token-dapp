@@ -53,6 +53,18 @@ export default function TransferPage() {
       return;
     }
     try {
+      try {
+        if (!amount || parseFloat(amount) <= 0) {
+          toast.error("Please enter a valid amount to transfer");
+          return;
+        }
+        if (parseFloat(amount) > parseFloat(balance)) {
+          toast.error("You don't have enough balance to transfer");
+          return;
+        }
+      } catch (error) {
+        
+      }
       writeContract({
         address: ContractAddress as `0x${string}`,
         abi: ABI,

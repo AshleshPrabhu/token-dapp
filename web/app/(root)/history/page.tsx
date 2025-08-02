@@ -14,6 +14,7 @@ import { formatUnits } from "ethers";
 import { ContractContext } from "@/app/context";
 import { getContract, getProvider } from "@/utils/contract";
 import { useContractABI } from "@/utils/abi";
+import { toast } from "sonner";
 
 interface Transaction {
   id: string;
@@ -35,6 +36,10 @@ export default function HistoryPage() {
 
   const getOrStoreInLocalStorage = async () => {
     if (!contractAddress || !ABI) return;
+    if(contractAddress!="0x31b2da62a1fccb0d99eeaf0940a3127045a86830"){
+      toast.info("balance feature is only implemented for my token to avoid costs");
+      return;
+    }
     
     const data = localStorage.getItem("transactions");
     if (data) {

@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WagmiConfigProvider } from "./wagmi-config-provider";
 import ContractContextProvider from "./context";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
         >
           <WagmiConfigProvider>
             <ContractContextProvider>
+              <Toaster />
               {children}
             </ContractContextProvider>
           </WagmiConfigProvider>
