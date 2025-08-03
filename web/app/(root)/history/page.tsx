@@ -30,42 +30,78 @@ interface Transaction {
 export default function HistoryPage() {
   const { address } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { contractAddress, contractNetwork } = useContext(ContractContext);
   const { ABI } = useContractABI();
   const provider = getProvider(contractNetwork);
 
   const getOrStoreInLocalStorage = async () => {
-    if (!contractAddress || !ABI) return;
-    if(contractAddress!="0x31b2da62a1fccb0d99eeaf0940a3127045a86830"){
-      toast.info("balance feature is only implemented for my token to avoid costs");
+    if (!contractAddress || !ABI) {
+      toast.error("Contract not properly configured");
       return;
     }
     
-    const data = localStorage.getItem("transactions");
-    if (data) {
-      const parsedData = JSON.parse(data);
-      const oldDate = new Date(parsedData.timestamp);
-      const currentDate = new Date();
-
-      if (currentDate.getTime() - oldDate.getTime() < 24 * 60 * 60 * 1000) {
-        setTransactions(parsedData.transactions);
-        return;
-      }
+    if (contractAddress !== "0x31b2da62a1fccb0d99eeaf0940a3127045a86830") {
+      toast.info("Transaction history feature is only implemented for the demo token to avoid costs");
+      return;
     }
-    const transactions = await getTransactions();
-    if (transactions && Array.isArray(transactions)) {
-      setTransactions(transactions);
-      const newData = {
-        timestamp: new Date().toISOString(),
-        transactions,
-      };
-      localStorage.setItem("transactions", JSON.stringify(newData));
+
+    if (isLoading) {
+      toast.warning("Transaction fetch already in progress");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+
+      const data = localStorage.getItem(`transactions-${contractAddress}-${contractNetwork}`);
+      if (data) {
+        const parsedData = JSON.parse(data);
+        const oldDate = new Date(parsedData.timestamp);
+        const currentDate = new Date();
+
+        if (currentDate.getTime() - oldDate.getTime() < 24 * 60 * 60 * 1000) {
+          setTransactions(parsedData.transactions);
+          toast.success("Loaded transactions from cache");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      toast.info("Fetching transaction history... This may take a while");
+      const fetchedTransactions = await getTransactions();
+      
+      if (fetchedTransactions && Array.isArray(fetchedTransactions)) {
+        setTransactions(fetchedTransactions);
+        
+        const newData = {
+          timestamp: new Date().toISOString(),
+          transactions: fetchedTransactions,
+        };
+        localStorage.setItem(`transactions-${contractAddress}-${contractNetwork}`, JSON.stringify(newData));
+        
+        toast.success(`Found ${fetchedTransactions.length} transactions`);
+      } else {
+        setTransactions([]);
+        toast.info("No transactions found");
+      }
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+      setError("Failed to fetch transaction history");
+      toast.error("Failed to fetch transaction history");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getTransactions = async () => {
-    console.log(address);
-    if (!address || !contractAddress || !ABI) return;
+    if (!address || !contractAddress || !ABI) {
+      throw new Error("Missing required parameters for transaction fetch");
+    }
+    
     try {
       const tokenContract = getContract(contractAddress, contractNetwork, ABI);
       const fromBlock = 8700000;
@@ -73,25 +109,40 @@ export default function HistoryPage() {
       const chunkSize = 500;
       let allLogs: any[] = [];
 
+      const totalChunks = Math.ceil((latestBlock - fromBlock) / chunkSize);
+      let processedChunks = 0;
+
       for (let start = fromBlock; start <= latestBlock; start += chunkSize) {
-        console.log(start);
+        processedChunks++;
+        console.log(`Processing chunk ${processedChunks}/${totalChunks} (blocks ${start} to ${Math.min(start + chunkSize - 1, latestBlock)})`);
+        
         const end = Math.min(start + chunkSize - 1, latestBlock);
 
-        const sentLogs = await tokenContract.queryFilter(
-          tokenContract.filters.Transfer(address, null),
-          start,
-          end,
-        );
-        const receivedLogs = await tokenContract.queryFilter(
-          tokenContract.filters.Transfer(null, address),
-          start,
-          end,
-        );
+        const [sentLogs, receivedLogs] = await Promise.all([
+          tokenContract.queryFilter(
+            tokenContract.filters.Transfer(address, null),
+            start,
+            end,
+          ),
+          tokenContract.queryFilter(
+            tokenContract.filters.Transfer(null, address),
+            start,
+            end,
+          )
+        ]);
 
         allLogs.push(...sentLogs, ...receivedLogs);
+        
+        if (processedChunks % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
 
-      const parsedTxs: Transaction[] = allLogs
+      const uniqueLogs = allLogs.filter((log, index, self) => 
+        index === self.findIndex(l => l.transactionHash === log.transactionHash && l.logIndex === log.logIndex)
+      );
+
+      const parsedTxs: Transaction[] = uniqueLogs
         .filter((log) => log.args)
         .sort((a, b) => b.blockNumber - a.blockNumber)
         .map((log, index) => {
@@ -104,23 +155,42 @@ export default function HistoryPage() {
                 : "Transfer";
 
           return {
-            id: `${log.transactionHash}-${index}`,
+            id: `${log.transactionHash}-${log.logIndex}`,
             hash: log.transactionHash,
             from,
             to,
-            amount: formatUnits(value, 18), // TODO:
+            amount: formatUnits(value, 18), // TODO: get decimals from contract
             type,
             timestamp: `Block #${log.blockNumber}`,
             status: "Success",
           };
         });
 
-      // setTransactions(parsedTxs);
       return parsedTxs;
     } catch (err) {
-      console.error(" Error while fetching transactions:", err);
+      console.error("Error while fetching transactions:", err);
+      throw err;
     }
   };
+
+  useEffect(() => {
+    if (contractAddress && contractNetwork) {
+      const data = localStorage.getItem(`transactions-${contractAddress}-${contractNetwork}`);
+      if (data) {
+        try {
+          const parsedData = JSON.parse(data);
+          setTransactions(parsedData.transactions || []);
+        } catch (err) {
+          console.error("Error parsing cached transactions:", err);
+        }
+      }
+    }
+  }, [contractAddress, contractNetwork]);
+
+  useEffect(() => {
+    setTransactions([]);
+    setError(null);
+  }, [contractAddress, contractNetwork]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,9 +210,22 @@ export default function HistoryPage() {
                     View all token transactions and activities
                   </p>
                 </div>
-                <Button onClick={() => getOrStoreInLocalStorage()} className="w-full sm:w-auto">
-                  <Search className="h-4 w-4 mr-2" />
-                  Get Transactions
+                <Button 
+                  onClick={() => getOrStoreInLocalStorage()} 
+                  className="w-full sm:w-auto"
+                  disabled={isLoading || !address || !contractAddress}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Fetching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Get Transactions
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -151,7 +234,31 @@ export default function HistoryPage() {
                   <CardTitle className="text-lg sm:text-xl">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3 sm:space-y-4">
+                  {error && (
+                    <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <p className="text-destructive text-sm">{error}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2" 
+                        onClick={() => getOrStoreInLocalStorage()}
+                        disabled={isLoading}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
+
+                  {isLoading && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-sm text-muted-foreground">Fetching transaction history...</p>
+                      <p className="text-xs text-muted-foreground mt-1">This may take a few minutes</p>
+                    </div>
+                  )}
+
+                  {!isLoading && (
+                    <div className="space-y-3 sm:space-y-4">
                     {transactions.map((tx) => (
                       <div
                         key={tx.id}
@@ -204,13 +311,16 @@ export default function HistoryPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  )}
 
-                  {transactions.length === 0 && (
+                  {!isLoading && transactions.length === 0 && !error && (
                     <div className="text-center text-muted-foreground mt-8 py-8">
                       <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p className="text-sm sm:text-base">No transactions found.</p>
-                      <p className="text-xs sm:text-sm mt-2">Click "Get Transactions" to fetch your transaction history.</p>
+                      <p className="text-xs sm:text-sm mt-2">
+                        {!address ? "Please connect your wallet first." : "Click \"Get Transactions\" to fetch your transaction history."}
+                      </p>
                     </div>
                   )}
                 </CardContent>
