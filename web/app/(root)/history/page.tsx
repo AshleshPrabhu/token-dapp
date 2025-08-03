@@ -128,19 +128,19 @@ export default function HistoryPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header />
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4 sm:p-6">
             <div className="max-w-7xl mx-auto">
-              <div className="mb-8 flex items-center justify-between">
+              <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground flex items-center">
-                    <History className="h-8 w-8 mr-3" />
-                    Transaction History
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center flex-wrap">
+                    <History className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 flex-shrink-0" />
+                    <span>Transaction History</span>
                   </h1>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                     View all token transactions and activities
                   </p>
                 </div>
-                <Button onClick={() => getOrStoreInLocalStorage()}>
+                <Button onClick={() => getOrStoreInLocalStorage()} className="w-full sm:w-auto">
                   <Search className="h-4 w-4 mr-2" />
                   Get Transactions
                 </Button>
@@ -148,16 +148,16 @@ export default function HistoryPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {transactions.map((tx) => (
                       <div
                         key={tx.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors space-y-3 sm:space-y-0"
                       >
-                        <div className="flex items-center space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                           <Badge
                             variant={
                               tx.type === "Transfer"
@@ -166,21 +166,27 @@ export default function HistoryPage() {
                                   ? "secondary"
                                   : "destructive"
                             }
+                            className="w-fit"
                           >
                             {tx.type}
                           </Badge>
-                          <div>
-                            <p className="font-medium">{tx.amount} tokens</p>
-                            <p className="text-sm text-muted-foreground">
-                              From: {tx.from.slice(0, 6)}...{tx.from.slice(-4)}{" "}
-                              → To: {tx.to.slice(0, 6)}...
-                              {tx.to.slice(-4)}
-                            </p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base">{tx.amount} tokens</p>
+                            <div className="text-xs sm:text-sm text-muted-foreground space-y-1 sm:space-y-0">
+                              <div className="flex flex-col sm:flex-row sm:space-x-2">
+                                <span className="font-medium">From:</span>
+                                <span className="break-all">{tx.from.slice(0, 6)}...{tx.from.slice(-4)}</span>
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:space-x-2">
+                                <span className="font-medium">To:</span>
+                                <span className="break-all">{tx.to.slice(0, 6)}...{tx.to.slice(-4)}</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{tx.timestamp}</p>
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start sm:text-right space-x-2 sm:space-x-0">
+                          <p className="text-xs sm:text-sm font-medium">{tx.timestamp}</p>
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline" className="text-xs">
                               {tx.status}
@@ -190,7 +196,7 @@ export default function HistoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                 <ExternalLink className="h-3 w-3" />
                               </Button>
                             </a>
@@ -201,8 +207,10 @@ export default function HistoryPage() {
                   </div>
 
                   {transactions.length === 0 && (
-                    <div className="text-center text-muted-foreground mt-4">
-                      No transactions found.
+                    <div className="text-center text-muted-foreground mt-8 py-8">
+                      <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-sm sm:text-base">No transactions found.</p>
+                      <p className="text-xs sm:text-sm mt-2">Click "Get Transactions" to fetch your transaction history.</p>
                     </div>
                   )}
                 </CardContent>

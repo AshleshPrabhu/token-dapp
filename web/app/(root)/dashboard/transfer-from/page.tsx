@@ -142,14 +142,14 @@ return (
             <Sidebar />
             <div className="flex-1 flex flex-col">
                 <Header />
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-4 sm:p-6">
                     <div className="max-w-4xl mx-auto">
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-foreground flex items-center">
-                                <ArrowRightLeft className="h-8 w-8 mr-3" />
-                                Transfer From
+                        <div className="mb-6 sm:mb-8">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center flex-wrap">
+                                <ArrowRightLeft className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 flex-shrink-0" />
+                                <span>Transfer From</span>
                             </h1>
-                            <p className="text-muted-foreground mt-1">
+                            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                             Transfer tokens on behalf of another address (requires prior approval)
                             </p>
                             <div className="mt-2">
@@ -176,10 +176,10 @@ return (
                                 <Label htmlFor="fromAddress">From Address (Token Owner)</Label>
                                 <Input
                                     id="fromAddress"
-                                    placeholder="0x... (address that owns the tokens)"
+                                    placeholder="0x..."
                                     value={fromAddress}
                                     onChange={(e) => setFromAddress(e.target.value)}
-                                    className="mt-1"
+                                    className="mt-1 text-sm"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
                                     The address that currently owns the tokens
@@ -190,10 +190,10 @@ return (
                                 <Label htmlFor="toAddress">To Address (Recipient)</Label>
                                 <Input
                                     id="toAddress"
-                                    placeholder="0x... (recipient address)"
+                                    placeholder="0x..."
                                     value={toAddress}
                                     onChange={(e) => setToAddress(e.target.value)}
-                                    className="mt-1"
+                                    className="mt-1 text-sm"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
                                     The address that will receive the tokens
@@ -208,7 +208,7 @@ return (
                                     placeholder="0.0"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="mt-1"
+                                    className="mt-1 text-sm"
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Amount of tokens to transfer
@@ -218,14 +218,14 @@ return (
                                 {allowanceBalance && (
                                 <div className="p-3 bg-muted rounded-lg">
                                     <p className="text-sm font-medium">Available Allowance</p>
-                                    <p className="text-2xl font-bold">{allowanceBalance}</p>
+                                    <p className="text-xl sm:text-2xl font-bold break-all">{allowanceBalance}</p>
                                     <p className="text-xs text-muted-foreground">
                                     tokens you can transfer from this address
                                     </p>
                                 </div>
                                 )}
 
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                 <Button
                                     variant="outline"
                                     onClick={checkAllowance}
@@ -251,8 +251,8 @@ return (
 
                                 {parseFloat(allowanceBalance || "0") === 0 && fromAddress && (
                                 <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                    <AlertDescription className="text-sm">
                                     No allowance found. The owner needs to approve your address first using the Allowance page.
                                     </AlertDescription>
                                 </Alert>
@@ -264,8 +264,8 @@ return (
                             <Card>
                                 <CardContent className="pt-4">
                                 <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription className="break-words">
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                    <AlertDescription className="break-words text-sm">
                                     {error?.message
                                         ? typeof error.message === "string"
                                         ? error.message
@@ -281,8 +281,8 @@ return (
                             <Card>
                                 <CardContent className="pt-4">
                                 <Alert>
-                                    <CheckCircle className="h-4 w-4" />
-                                    <AlertDescription className="flex flex-col">
+                                    <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                                    <AlertDescription className="flex flex-col text-sm">
                                     <span>Transfer successful!</span>
                                     <span className="text-xs text-muted-foreground break-all mt-1">
                                         Transaction Hash: {data}

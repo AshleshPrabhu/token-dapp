@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Sidebar } from "@/components/sidebar";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { SidebarContent } from "@/components/sidebar";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
@@ -18,7 +19,14 @@ export function MobileSidebar() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-64">
-        <Sidebar />
+        <SheetHeader>
+          <VisuallyHidden>
+            <SheetTitle>Navigation Menu</SheetTitle>
+          </VisuallyHidden>
+        </SheetHeader>
+        <div className="w-full h-full">
+          <SidebarContent />
+        </div>
       </SheetContent>
     </Sheet>
   );
