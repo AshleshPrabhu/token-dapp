@@ -12,6 +12,7 @@ import {
   Shield,
   History,
   CreditCard,
+  ArrowRightLeft,
 } from "lucide-react";
 
 const navigation = [
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Mint", href: "/dashboard/mint", icon: Plus },
   { name: "Burn", href: "/dashboard/burn", icon: Flame },
   { name: "Transfer", href: "/dashboard/transfer", icon: Send },
+  { name: "Transfer From", href: "/dashboard/transfer-from", icon: ArrowRightLeft },
   { name: "Balance", href: "/dashboard/balance", icon: CreditCard },
   { name: "Allowance", href: "/dashboard/allowance", icon: Shield },
   { name: "History", href: "/history", icon: History },

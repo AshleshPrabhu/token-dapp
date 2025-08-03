@@ -51,6 +51,14 @@ export default function AllowancePage() {
   const { writeContract, isPending, isError, error, data } = useWriteContract();
 
   const handleApprove = async () => {
+    if(!spender || !isAddress(spender)){
+      toast.error("please enter valid ethereum address")
+      return;
+    }
+    if(spender == address){
+      toast.error("You cannot approve allowance for your own address");
+      return;
+    }
     try {
       writeContract({
         address: ContractAddress as `0x${string}`,
@@ -81,6 +89,10 @@ export default function AllowancePage() {
       if (!spender || !isAddress(spender)) {
         console.log("B")
         toast.error("Please enter a valid Ethereum address");
+        return;
+      }
+      if(spender == address){
+        toast.error("You cannot check allowance for your own address");
         return;
       }
       setIsLoading(true);
