@@ -346,7 +346,61 @@ class ABIService {
     }
 
     private notifySubscribers(abi: any, contractAddress: string) {
-        this.subscribers.forEach(callback => callback(abi, contractAddress));
+        this.subscribers.forEach(callback => {
+            try {
+                callback(abi, contractAddress);
+            } catch (error) {
+                console.error('Error in ABI subscriber:', error);
+            }
+        });
+    }
+
+    private async delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    private async fetchWithRetry(url: string, retries = 3): Promise<Response> {
+        for (let i = 0; i < retries; i++) {
+            try {
+                console.log(`🔄 Attempting ABI fetch (${i + 1}/${retries})`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'TokenDApp/1.0'
+                    }
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    return response;
+                }
+
+                if (response.status === 429) {
+                    console.warn(`⏳ Rate limited, waiting before retry ${i + 1}/${retries}`);
+                    await this.delay(Math.pow(2, i) * 2000); // Exponential backoff
+                    continue;
+                }
+
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            } catch (error: any) {
+                console.warn(`❌ Fetch attempt ${i + 1} failed:`, error.message);
+                
+                if (i === retries - 1) {
+                    throw error;
+                }
+                
+                // Wait before retry with exponential backoff
+                await this.delay(Math.pow(2, i) * 1000);
+            }
+        }
+        
+        throw new Error('All retry attempts failed');
     }
 
     async fetchABI(contractAddress: string, contractNetwork: string): Promise<any> {
@@ -355,55 +409,98 @@ class ABIService {
         // Check cache first
         const cached = abiCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            console.log("Using cached ABI for:", contractAddress);
+            console.log("📦 Using cached ABI for:", contractAddress);
             this.notifySubscribers(cached.abi, contractAddress);
             return cached.abi;
         }
 
-        console.log("Fetching ABI for:", contractAddress, "on", contractNetwork);
+        // Validate inputs
+        if (!contractAddress || !contractAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+            console.warn("❌ Invalid contract address format");
+            const defaultAbi = DEFAULT_ABI;
+            this.notifySubscribers(defaultAbi, contractAddress);
+            return defaultAbi;
+        }
+
+        console.log("🌐 Fetching ABI for:", contractAddress, "on", contractNetwork);
         
         try {
-        let url;
-        if (contractNetwork === "Ethereum Sepolia") {
-            url = `https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}`;
-        } else {
-            url = `https://api-mainnet.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}`;
-        }
+            let apiUrl: string;
+            
+            if (contractNetwork === "Ethereum Sepolia") {
+                apiUrl = `https://api-sepolia.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}&apikey=${process.env.ETHERSCAN_API_KEY}`;
+            } else {
+                apiUrl = `https://api.etherscan.io/api?module=contract&action=getabi&address=${contractAddress}&apikey=${process.env.ETHERSCAN_API_KEY}`;
+            }
 
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
-        }
+            const response = await this.fetchWithRetry(apiUrl);
+            const data = await response.json();
 
-        const data = await response.json();
-        
-        if (data.status === "1") {
-            const abi = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-            console.log("ABI fetched successfully from Etherscan");
+            if (data.status === "1" && data.result) {
+                try {
+                    const abi = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+                    
+                    // Validate ABI structure
+                    if (Array.isArray(abi) && abi.length > 0) {
+                        console.log("✅ ABI fetched successfully from Etherscan");
+                        
+                        // Cache the result
+                        abiCache.set(cacheKey, { abi, timestamp: Date.now() });
+                        
+                        this.notifySubscribers(abi, contractAddress);
+                        return abi;
+                    } else {
+                        throw new Error("Invalid ABI structure received");
+                    }
+                } catch (parseError) {
+                    console.error("❌ Failed to parse ABI:", parseError);
+                    throw new Error("Invalid ABI format received from API");
+                }
+            } else {
+                const errorMsg = data.result || "Unknown API error";
+                console.warn("Etherscan API error:", errorMsg);
+                
+                if (errorMsg.includes("Contract source code not verified")) {
+                    console.info(" Contract not verified - using default ERC20 ABI");
+                } else if (errorMsg.includes("Invalid API Key")) {
+                    console.warn(" API key issue - using default ABI");
+                } else if (errorMsg.includes("Max rate limit reached")) {
+                    console.warn(" Rate limit reached - using default ABI");
+                } else {
+                    console.warn(" API request failed - using default ABI");
+                }
+                
+                // Cache default ABI for failed requests (shorter duration)
+                abiCache.set(cacheKey, { abi: DEFAULT_ABI, timestamp: Date.now() - (CACHE_DURATION / 2) });
+                
+                this.notifySubscribers(DEFAULT_ABI, contractAddress);
+                return DEFAULT_ABI;
+            }
+        } catch (error: any) {
+            console.error('Error fetching ABI:', error.message);
             
-            // Cache the result
-            abiCache.set(cacheKey, { abi, timestamp: Date.now() });
+            // Provide more specific error context
+            let errorContext = "using default ERC20 ABI";
+            if (error.name === 'AbortError') {
+                errorContext = "request timeout - " + errorContext;
+                console.warn(" Request timed out - " + errorContext);
+            } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorContext = "network error - " + errorContext;
+                console.warn(" Network connectivity issue - " + errorContext);
+            } else if (error.message.includes('rate limit')) {
+                errorContext = "rate limited - " + errorContext;
+                console.warn("API rate limited - " + errorContext);
+            } else {
+                console.warn(" API error - " + errorContext);
+            }
             
-            this.notifySubscribers(abi, contractAddress);
-            return abi;
-        } else {
-            console.warn("ABI fetch failed:", data.result, "- Using default ABI");
+            console.info(` Falling back to default ABI (${errorContext})`);
             
-            // Cache the default ABI to avoid repeated failed requests
-            abiCache.set(cacheKey, { abi: DEFAULT_ABI, timestamp: Date.now() });
+            // Cache default ABI for network errors (shorter duration)
+            abiCache.set(cacheKey, { abi: DEFAULT_ABI, timestamp: Date.now() - (CACHE_DURATION / 2) });
             
             this.notifySubscribers(DEFAULT_ABI, contractAddress);
             return DEFAULT_ABI;
-        }
-        } catch (error) {
-        console.error('Error fetching ABI:', error, "- Using default ABI");
-        
-        // Cache the default ABI to avoid repeated failed requests
-        abiCache.set(cacheKey, { abi: DEFAULT_ABI, timestamp: Date.now() });
-        
-        this.notifySubscribers(DEFAULT_ABI, contractAddress);
-        return DEFAULT_ABI;
         }
     }
 

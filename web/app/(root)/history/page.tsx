@@ -37,12 +37,14 @@ export default function HistoryPage() {
   const provider = getProvider(contractNetwork);
 
   const getOrStoreInLocalStorage = async () => {
+
     if (!contractAddress || !ABI) {
       toast.error("Contract not properly configured");
       return;
     }
-    
+    console.log(contractAddress)
     if (contractAddress !== "0x31b2da62a1fccb0d99eeaf0940a3127045a86830") {
+      console.log("here")
       toast.info("Transaction history feature is only implemented for the demo token to avoid costs");
       return;
     }
