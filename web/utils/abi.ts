@@ -2,7 +2,6 @@
 
 import { ContractContext } from "@/app/context";
 import { useContext, useEffect, useState } from "react";
-import { Abi } from "viem";
 import { abiService, DEFAULT_ABI } from "./abiService";
 import { toast } from "sonner";
 
@@ -24,10 +23,8 @@ export function useContractABI() {
 
     console.log("useContractABI: Setting up for", contractAddress, contractNetwork);
 
-    // Set default ABI immediately
     setABI(DEFAULT_ABI);
 
-    // Only fetch ABI if contract is valid
     if (!isContractValid) {
       console.log("Contract is invalid, using default ABI");
       setIsLoadingABI(false);
@@ -36,13 +33,11 @@ export function useContractABI() {
 
     setIsLoadingABI(true);
 
-    // Fetch the actual ABI
     const fetchABI = async () => {
       try {
         const abi = await abiService.fetchABI(contractAddress, contractNetwork);
         setABI(abi);
         
-        // Only show success toast if we got a non-default ABI
         if (abi !== DEFAULT_ABI && Array.isArray(abi) && abi.length > DEFAULT_ABI.length) {
           toast.success("Contract ABI loaded successfully");
         } else {
@@ -59,7 +54,6 @@ export function useContractABI() {
 
     fetchABI();
 
-    // Subscribe to ABI updates
     const unsubscribe = abiService.subscribe((abi, address) => {
       if (address === contractAddress) {
         console.log("ABI updated for", address);
