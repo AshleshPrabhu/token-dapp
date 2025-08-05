@@ -44,7 +44,7 @@ export default function AllowancePage() {
   const client = createPublicClient({
     chain: sepolia,
     transport: http(
-      "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37",
+      `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
     ),
   });
 

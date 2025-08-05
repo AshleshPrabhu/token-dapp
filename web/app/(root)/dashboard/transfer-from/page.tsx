@@ -32,8 +32,8 @@ export default function TransferFromPage() {
     const getClient = () => {
         const chain = contractNetwork === "Ethereum Sepolia" ? sepolia : mainnet;
         const rpcUrl = contractNetwork === "Ethereum Sepolia" 
-        ? "https://eth-sepolia.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37"
-        : "https://eth-mainnet.g.alchemy.com/v2/fQZ3GExRdziF2fHUbxX6Jwt9w18XWj37";
+        ? `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`
+        : `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`;
         
         return createPublicClient({
             chain,
